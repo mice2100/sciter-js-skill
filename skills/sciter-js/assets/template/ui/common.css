@@ -1,0 +1,133 @@
+/* Common Sciter CSS Reset and Base Styles */
+
+/* Box sizing */
+* {
+    box-sizing: border-box;
+}
+
+/* Remove default margins */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Base font settings */
+html {
+    font: system;
+    font-size: 14dip;
+}
+
+body {
+    font-family: system, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+h1 { font-size: 32dip; }
+h2 { font-size: 24dip; }
+h3 { font-size: 20dip; }
+h4 { font-size: 16dip; }
+h5 { font-size: 14dip; }
+h6 { font-size: 12dip; }
+
+/* Paragraphs */
+p {
+    margin: 0 0 10dip 0;
+}
+
+/* Links */
+a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Lists */
+ul, ol {
+    margin: 0 0 10dip 0;
+    padding-left: 20dip;
+}
+
+/* Code blocks */
+code {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    background: #f4f4f4;
+    padding: 2dip 4dip;
+    border-radius: 3dip;
+    font-size: 0.9em;
+}
+
+pre {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 15dip;
+    border-radius: 4dip;
+    overflow-x: auto;
+    margin: 0 0 15dip 0;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10dip;
+    height: 10dip;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 5dip;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Selection color */
+::selection {
+    background: #3498db;
+    color: white;
+}
+
+/* Focus styles */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: 2dip solid rgba(52, 152, 219, 0.5);
+    outline-offset: 1dip;
+}
+
+/* Disabled elements */
+input:disabled,
+select:disabled,
+textarea:disabled,
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Utility classes */
+.hidden { display: none; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.bold { font-weight: 600; }
+.italic { font-style: italic; }
+.underline { text-decoration: underline; }

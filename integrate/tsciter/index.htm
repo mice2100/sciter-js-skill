@@ -1,0 +1,77 @@
+﻿<html window-width="800px"
+      window-height="600px"
+      window-min-width="640px"
+      window-min-height="480px"
+      window-icon="window-icon.png"
+      window-alignment="5">
+    <head>
+        <title>Test</title>
+        <style>
+
+body {
+  //font-family: sans-serif;
+  font:system;
+  font-size:20pt;
+  background:infobackground;
+}
+
+section {
+  size:*;
+  border:1px solid;
+  overflow-y:scroll-indicator;
+}
+
+text.ellipsis {
+  //overflow-x:hidden;
+  //overflow-x:none;
+  text-overflow:ellipsis;
+  //white-space:nowrap;
+  width:*;
+  margin-right:*;
+  border:1px solid;
+  //font-family:monospace;
+  //max-height:2.6em;
+}
+
+        </style>
+        <script|module>
+
+    function Scrollable() {
+       let list = [];
+       for(let n = 0; n < 50; ++n)
+         list.push(<p>item #{n}</p>);
+       
+       return <section>{list}</section>
+    }
+
+    //document.body.prepend(<text>{URL.toPath(document.url())}</text>);
+    //document.body.append(<Scrollable/>);
+    //console.log(Window.this.document.style["zoom"]);
+
+        </script>
+    </head>
+    <body>
+<!--      <text.ellipsis>The quick brown fox jumps over the lazy dog</text>
+
+
+        -->
+
+
+      <p title="tooltip">The quick brown 🦊 jumps over the lazy 🐶</p>
+      <p>Emojis &#x1f1e6;&#x1f1fd; 👨🏽‍🦳👨🏽‍🚒</p>
+
+      <p #test style="border:1px solid;">Test <sub>sub</sub> and <sup>sup</sup></p>
+
+      <input|text #test value="Test xyz"/> 
+      <button>Test xyz</button>
+      <select #test>
+        <option>Aaa</option>
+        <option>Bbb</option>
+        <option>Ccc</option>
+      </select>
+      <button|radio>Test xyz</button>
+      <button|radio>Test abc</button>
+      <button|checkbox>Test xyz</button>
+     
+    </body>
+</html>

@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <title>Test</title>
+        <style>
+
+htmlarea { 
+  display:block; size:*; padding:1em; 
+  overflow:auto;
+}
+
+htmlarea > p {
+  border:1px solid red;
+}
+
+htmlarea > p#test {
+  border:1px solid blue;
+}
+
+        </style>
+        <script type="module">
+
+document.on("click","button#append",function() {
+  const htmlarea = document.$("htmlarea");
+  htmlarea.state.focus = true;
+  htmlarea.execCommand("navigate:end");
+  htmlarea.execCommand("edit:insert-html","<p><b>Hello</b> world!</p>");
+});
+
+        </script>
+    </head>
+    <body>
+
+<div>
+  <button#append>Append HTML</button>
+</div>
+
+<htmlarea spellcheck="false">
+  <p #test>N M</p>
+</htmlarea>
+
+
+    </body>
+</html>

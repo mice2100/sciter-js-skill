@@ -1,0 +1,52 @@
+
+
+richtext { style-set: richtext-chrome; }
+
+@set richtext-chrome 
+{
+  :root {
+    prototype: RichtextEditor url(behavior.js);
+    display:block;
+    size:*;
+  }
+  htmlarea { // the editor per se
+    size:*;
+    border:none;
+    overflow:auto;
+  }
+
+  toolbar { 
+    flow:horizontal; 
+    border-spacing:2px; // space between children
+    background:transparent;
+    padding: 2px;
+    border-bottom:1px solid #ccc;
+  }
+
+  toolbar > button {
+    size:24px;
+    foreground-size:18px; 
+    padding:0;
+    foreground-repeat: no-repeat;
+    foreground-position: 50% 50%;
+    fill:#000;
+    stroke:none;
+  }
+
+  toolbar > button:disabled { fill:#ccc; }
+
+  toolbar > button.bold { foreground-image: icon(bold);}
+  toolbar > button.italic { foreground-image: icon(italic); }
+  toolbar > button.sub { foreground-image: icon(sub); }
+  toolbar > button.sup { foreground-image: icon(sup);}
+  toolbar > button.del { foreground-image: icon(strikeout);}
+  toolbar > button.underline { foreground-image: icon(underline);}
+  toolbar > button.code { foreground-image: icon(code);}
+  toolbar > button.ol { foreground-image: icon(list-ol);}
+  toolbar > button.ul { foreground-image: icon(list-ul);}
+  toolbar > button.dl { foreground-image: icon(list-dl);}
+
+  toolbar > button.indent { foreground-image: icon(indent);}
+  toolbar > button.outdent { foreground-image: icon(outdent);}
+}
+

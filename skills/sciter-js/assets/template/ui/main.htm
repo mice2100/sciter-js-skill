@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{PROJECT_NAME}}</title>
+    <meta charset="utf-8">
+
+    <style type="text/css">
+        /* Import global styles */
+        @import url(common.css);
+
+        /* Main layout using Sciter flow (NOT flex) */
+        html {
+            flow: vertical;
+            size: *;
+        }
+
+        body {
+            flow: vertical;
+            size: *;
+            padding: 20dip;
+            background: #f5f5f5;
+            font: system;
+        }
+
+        /* Header bar */
+        header {
+            flow: horizontal;
+            height: 60dip;
+            margin: 0 0 20dip 0;
+            background: #2c3e50;
+            border-radius: 8dip;
+            padding: 0 20dip;
+        }
+
+        header h1 {
+            color: white;
+            font-size: 24dip;
+            margin: * 0; /* Fill available horizontal space */
+            vertical-align: middle;
+        }
+
+        /* Main content area */
+        main {
+            flow: vertical;
+            size: *;
+        }
+
+        /* Card container */
+        .card {
+            flow: vertical;
+            background: white;
+            border-radius: 8dip;
+            padding: 20dip;
+            margin: 0 0 20dip 0;
+            box-shadow: 0 2dip 8dip rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            margin: 0 0 15dip 0;
+            font-size: 18dip;
+            color: #2c3e50;
+        }
+
+        /* Button row using horizontal flow */
+        .button-row {
+            flow: horizontal;
+            border-spacing: 10dip; /* Space between buttons */
+            margin: 0 0 15dip 0;
+        }
+
+        button {
+            min-width: 120dip;
+            padding: 10dip 20dip;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4dip;
+            cursor: pointer;
+            font-size: 14dip;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:active {
+            background: #21618c;
+        }
+
+        button.primary {
+            background: #27ae60;
+        }
+
+        button.primary:hover {
+            background: #229954;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        /* Form layout using row() flow */
+        form {
+            flow: row(label, input select textarea);
+            flow-columns: max-content *; /* Label fixed width, input fills rest */
+            border-spacing: 10dip;
+        }
+
+        label {
+            color: #555;
+            font-size: 14dip;
+            vertical-align: middle;
+        }
+
+        input, select, textarea {
+            padding: 8dip 12dip;
+            border: 1dip solid #ddd;
+            border-radius: 4dip;
+            font-size: 14dip;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 80dip;
+            resize: vertical;
+        }
+
+        /* Status bar */
+        footer {
+            flow: horizontal;
+            height: 30dip;
+            margin: 20dip 0 0 0;
+            padding: 0 15dip;
+            background: #ecf0f1;
+            border-radius: 4dip;
+            vertical-align: middle;
+        }
+
+        #status {
+            color: #7f8c8d;
+            font-size: 12dip;
+            margin: * 0;
+        }
+
+        /* Output area */
+        #output {
+            flow: vertical;
+            size: *;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15dip;
+            border-radius: 4dip;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 12dip;
+            overflow-x: auto;
+            overflow-y: auto-indicator;
+            white-space: pre-wrap;
+        }
+
+        /* Grid layout example */
+        .grid-container {
+            flow: grid(
+                1 2,
+                3 3
+            );
+            size: *;
+        }
+
+        .sidebar {
+            background: #ecf0f1;
+            padding: 15dip;
+        }
+
+        .content {
+            flow: vertical;
+            size: *;
+            margin: 0 0 0 15dip;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>{{PROJECT_NAME}}</h1>
+        <button id="aboutBtn">About</button>
+    </header>
+
+    <!-- Main content -->
+    <main class="card">
+        <h2>Native Function Test</h2>
+
+        <!-- Button row -->
+        <div class="button-row">
+            <button.primary id="testNativeBtn">Test Native</button>
+            <button id="clearOutputBtn">Clear Output</button>
+            <button.danger id="openFileBtn">Open File</button>
+        </div>
+
+        <!-- Form example -->
+        <form>
+            <label for="nameInput">Name:</label>
+            <input id="nameInput" type="text" placeholder="Enter your name" />
+
+            <label for="countInput">Count:</label>
+            <input id="countInput" type="number" value="1" min="1" max="100" />
+        </form>
+
+        <!-- Output area -->
+        <div id="output">Ready. Click "Test Native" to begin.</div>
+    </main>
+
+    <!-- Status bar -->
+    <footer>
+        <span id="status">Ready</span>
+        <span id="version">Version: --</span>
+    </footer>
+
+    <!-- Main application script -->
+    <script type="module">
+        import * as sys from "sys";
+
+        // ============================================================
+        // UI Element References
+        // ============================================================
+        const output = document.$("#output");
+        const status = document.$("#status");
+        const versionSpan = document.$("#version");
+        const nameInput = document.$("#nameInput");
+        const countInput = document.$("#countInput");
+
+        // ============================================================
+        // Utility Functions
+        // ============================================================
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTo(0, output.scrollHeight, true);
+        }
+
+        function setStatus(text) {
+            status.textContent = text;
+        }
+
+        // ============================================================
+        // Native Function Calls
+        // ============================================================
+
+        function testNativeFunctions() {
+            log("=== Testing Native Functions ===");
+
+            // Access global asset interface
+            const asset = Window.this.assetInterface;
+
+            // Test stringSum function
+            try {
+                const result = asset.stringSum("Hello", "World");
+                log(`stringSum("Hello", "World") = "${result}"`);
+            } catch(e) {
+                log(`Error in stringSum: ${e}`);
+            }
+
+            // Test addIntegers function
+            try {
+                const a = parseInt(countInput.value) || 0;
+                const b = 10;
+                const result = asset.addIntegers(a, b);
+                log(`addIntegers(${a}, ${b}) = ${result}`);
+            } catch(e) {
+                log(`Error in addIntegers: ${e}`);
+            }
+
+            // Test virtual property access
+            try {
+                const handle = asset.windowHandle;
+                log(`Window handle: ${handle}`);
+                log(`App version: ${asset.appVersion}`);
+            } catch(e) {
+                log(`Error reading properties: ${e}`);
+            }
+
+            log("Done.");
+        }
+
+        function openFile() {
+            log("=== Opening File Dialog ===");
+            const asset = Window.this.assetInterface;
+
+            try {
+                const path = asset.openFileDialog("Select a file", "All Files|*.*");
+                if (path) {
+                    log(`Selected: ${path}`);
+                } else {
+                    log("No file selected");
+                }
+            } catch(e) {
+                log(`Error: ${e}`);
+            }
+        }
+
+        // ============================================================
+        // Event Handlers
+        // ============================================================
+
+        document.on("click", "#testNativeBtn", function() {
+            setStatus("Running native tests...");
+            testNativeFunctions();
+            setStatus("Ready");
+        });
+
+        document.on("click", "#clearOutputBtn", function() {
+            output.textContent = "Output cleared.\n";
+            setStatus("Output cleared");
+        });
+
+        document.on("click", "#openFileBtn", function() {
+            setStatus("Opening file dialog...");
+            openFile();
+            setStatus("Ready");
+        });
+
+        document.on("click", "#aboutBtn", function() {
+            const asset = Window.this.assetInterface;
+            Window.this.modal({
+                url: "self:#about-dialog",
+                x: 100,
+                y: 100,
+                width: 300,
+                height: 200,
+                alignment: 5, // center
+                parameters: { version: asset.appVersion }
+            });
+        });
+
+        // ============================================================
+        // Initialization
+        // ============================================================
+
+        function init() {
+            log("Application initialized");
+            log("Sciter version: " + sys.sciterVersion());
+
+            // Display app version from native code
+            try {
+                const asset = Window.this.assetInterface;
+                versionSpan.textContent = `Version: ${asset.appVersion}`;
+            } catch(e) {
+                versionSpan.textContent = "Version: unknown";
+            }
+        }
+
+        // Run initialization
+        init();
+    </script>
+
+    <!-- About Dialog Template -->
+    <div id="about-dialog" style="display:none">
+        <html window-frame="tool-window" window-resizable="false">
+        <head>
+            <style>
+                html { flow: vertical; padding: 20dip; }
+                h2 { margin: 0 0 15dip 0; }
+                p { margin: 0 0 20dip 0; }
+                button { width: *; }
+            </style>
+        </head>
+        <body>
+            <h2>About {{PROJECT_NAME}}</h2>
+            <p>Version: $(version)</p>
+            <p>A Sciter.js desktop application.</p>
+            <button id="closeBtn">Close</button>
+
+            <script type="module">
+                document.on("click", "#closeBtn", function() {
+                    Window.this.close();
+                });
+            </script>
+        </body>
+        </html>
+    </div>
+</body>
+</html>
