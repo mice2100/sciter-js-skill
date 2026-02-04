@@ -440,6 +440,100 @@ debug.highlightElement(el);
 debug.getStyleRulesOfElement(el);
 ```
 
+## Global Functions
+
+Standard Web API globals available in Sciter:
+
+### Timers
+
+```js
+// One-shot timer
+const timerId = setTimeout(() => {
+  console.log("Executed after delay");
+}, 1000);
+
+// Clear timeout
+clearTimeout(timerId);
+
+// Repeating interval
+const intervalId = setInterval(() => {
+  console.log("Executed every second");
+}, 1000);
+
+// Clear interval
+clearInterval(intervalId);
+
+// Animation frame (synced with display refresh, ~60fps)
+const animId = requestAnimationFrame(() => {
+  console.log("Next paint frame");
+});
+
+// Cancel animation frame
+cancelAnimationFrame(animId);
+```
+
+### Console
+
+```js
+console.log("Basic log");
+console.log("Formatted: %s = %d", "answer", 42);
+
+// Custom exception handler (override default)
+console.reportException = function(err, isPromise) {
+  Window.this.modal(<alert>{err.toString()}</alert>);
+  return "";
+};
+
+console.warn("Warning message");
+console.error("Error message");
+```
+
+### HTTP Client
+
+```js
+// Basic fetch
+const response = await fetch("https://api.example.com/data");
+const data = await response.json();
+
+// With options
+const response = await fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ key: "value" })
+});
+```
+
+### Sciter-Specific Globals
+
+```js
+// printf formatting (C-style, with %v and %V extensions)
+const formatted = printf("Value: %v", { a: 1 });  // JSON output
+
+// scanf parsing
+const values = scanf("%d %s", "42 hello");  // [42, "hello"]
+
+// Module evaluation
+const module = evalModule("export const x = 42;", "inline:module");
+// module.x === 42
+
+// Load script synchronously
+loadScript("utils.js");
+
+// Load script module synchronously
+const exports = loadScriptModule("mymodule.js");
+```
+
+### Global Properties
+
+```js
+// Global namespace (aliased as `window`)
+globalThis.someValue = 123;
+window.someValue;  // 123
+
+// Device pixel ratio (HiDPI/Retina support)
+const dpr = devicePixelRatio;  // e.g., 2.0 on Retina
+```
+
 ## Graphics API
 
 Sciter's 2D Graphics API for canvas, element painting, and offscreen rendering.
@@ -559,16 +653,10 @@ Sciter provides two ways to create custom UI components: extending Element class
 
 Create reusable UI components by extending the built-in Element class:
 
-```css
-/* Attach component via CSS prototype */
-my-widget {
-  prototype: MyWidget url(my-widget.js);
-}
-```
-
+**Module with Export (Recommended):**
 ```js
 // my-widget.js
-class MyWidget extends Element {
+export class MyWidget extends Element {
   // Constructor (optional)
   constructor() {
     super();  // Always call super()
@@ -583,15 +671,26 @@ class MyWidget extends Element {
 
   // Called before removal from DOM
   componentWillUnmount() {
-    // Cleanup resources
+    // Cleanup resources (clear timers, etc.)
   }
 
   // Event handlers (special syntax)
   ["on click at button"]() {
     this.value++;
     this.componentUpdate({ value: this.value });
-    this.refresh();  // Trigger paintContent repaint
+    this.requestPaint();  // Trigger paintContent repaint
   }
+}
+
+// Usage in other modules:
+// import { MyWidget } from "my-widget.js";
+```
+
+**CSS prototype attachment (alternative):**
+```css
+/* Attach component via CSS prototype */
+my-widget {
+  prototype: MyWidget url(my-widget.js);
 }
 ```
 
@@ -602,13 +701,23 @@ Implement immediate mode rendering using Graphics API:
 ```js
 class AnimatedWidget extends Element {
   angle = 0;
+  _animationId = null;
 
   componentDidMount() {
-    this.timer(16, () => {
+    // Use standard Web API for animation
+    const animate = () => {
       this.angle += 0.05;
-      this.refresh();  // Schedule repaint
-      return true;
-    });
+      this.requestPaint();  // Schedule repaint
+      this._animationId = requestAnimationFrame(animate);
+    };
+    this._animationId = requestAnimationFrame(animate);
+  }
+
+  componentWillUnmount() {
+    // Clean up animation
+    if (this._animationId !== null) {
+      cancelAnimationFrame(this._animationId);
+    }
   }
 
   // Paint layers available:
@@ -618,7 +727,7 @@ class AnimatedWidget extends Element {
   paintOutline(gfx) { /* Draw on top of everything */ }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("client");
 
     gfx.save();
     gfx.translate(width / 2, height / 2);
@@ -633,10 +742,61 @@ class AnimatedWidget extends Element {
 ```
 
 **Key paintContent patterns:**
-- Always call `this.refresh()` to schedule repaint
+- Always call `this.requestPaint()` to schedule repaint
 - Use `this.box("dimension")` for element size
 - Use `gfx.save()` / `gfx.restore()` for transformations
 - Combine with Reactor for hybrid components
+
+### Element.box() - Getting Element Metrics
+
+The `Element.box()` method returns geometric information about elements:
+
+```js
+element.box(boxType[, relativeTo[, asPpx]]) : Rect
+// Returns: Graphics.Rect object with properties [x, y, width, height]
+```
+
+**boxType** (first argument) - defines which metric to return:
+
+| boxType | Description |
+|---------|-------------|
+| `"inner"` | Inner box of the element (content area) |
+| `"border"` | Border box (including borders) |
+| `"padding"` | Padding box |
+| `"margin"` | Margin box |
+| `"client"` | Client/scrollable area (padding minus scrollbars) |
+| `"content"` | Content outline (scrollable content size) |
+| `"caret"` | Caret position (if any) |
+| `"icon"` | Position of foreground image |
+| `"scroll"` | Projection of client rect on content box |
+| `"dimension"` | `[width, height]` - just the size |
+| `"xywh"` | `[x, y, width, height]` - position and size |
+| `"rect"` | Same as `"xywh"` |
+
+**relativeTo** (second argument, optional) - coordinate system:
+
+| relativeTo | Description |
+|------------|-------------|
+| `"self"` | (default) Relative to the element itself |
+| `"parent"` | Relative to DOM parent |
+| `"document"` | Relative to root document |
+| `"window"` | Relative to window client area |
+| `"screen"` | Absolute screen coordinates |
+| `"container"` | Relative to nearest positioned container |
+| `Element` | Relative to specific element reference |
+
+**asPpx** (third argument, optional) - if `true`, returns screen/physical pixels instead of CSS DIPs
+
+```js
+// Get element size
+const [width, height] = this.box("dimension");
+
+// Get position relative to document
+const [x, y, w, h] = this.box("inner", "document");
+
+// Get absolute screen position in physical pixels
+const rect = this.box("border", "screen", true);
+```
 
 ### Reactor (JSX) Components
 
@@ -653,12 +813,20 @@ function Welcome(props) {
 ```js
 class Clock extends Element {
   time = new Date();
+  _intervalId = null;
 
   componentDidMount() {
-    this.timer(1000, () => {
+    // Use setInterval instead of Element.timer()
+    this._intervalId = setInterval(() => {
       this.componentUpdate({ time: new Date() });
-      return true;
-    });
+    }, 1000);
+  }
+
+  componentWillUnmount() {
+    // Clean up interval
+    if (this._intervalId !== null) {
+      clearInterval(this._intervalId);
+    }
   }
 
   render() {
@@ -742,7 +910,7 @@ class HybridWidget extends Element {
     this.$("#slider").on("change", () => {
       this.value = parseInt(this.$("#slider").value);
       this.componentUpdate();
-      this.refresh();  // Trigger paintContent
+      this.requestPaint();  // Trigger paintContent
     });
   }
 
@@ -933,7 +1101,7 @@ First file found is used.
         import * as env from "@env";
         import * as sys from "@sys";
 
-        document.$("h1").textContent = `Hello from ${env.PLATFORM}!`;
+        document.$("h1").textContent = `Hello from ${env.PLATFORM}`;
     </script>
 </body>
 </html>
