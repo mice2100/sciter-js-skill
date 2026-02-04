@@ -1,6 +1,6 @@
 # Sciter JS Runtime API Reference
 
-Complete reference for Sciter-specific JavaScript modules: `@sciter`, `@sys`, `@env`, `@debug`.
+Complete reference for Sciter-specific JavaScript modules: `@sciter`, `@sys`, `@env`, `@debug`, `@storage`.
 
 ## Module `@sciter`
 
@@ -418,6 +418,192 @@ debug.objectKind(obj);
 debug.sublimatedValue(val, expanded);
 debug.frameVariables(frameId);
 ```
+
+---
+
+## Module `@storage`
+
+Persistent key-value storage with indexing capabilities. Ideal for local data persistence.
+
+```js
+import * as Storage from "@storage";
+import * as env from "@env";
+```
+
+### Opening a Database
+
+```js
+// Open or create database
+const storage = Storage.open(env.path("documents") + "/myapp.db");
+```
+
+### Root Object and Initialization
+
+```js
+function initDb(storage) {
+    storage.root = {
+        version: 1,
+        notesByDate: storage.createIndex("date", false), // non-unique index
+        notesById: storage.createIndex("string", true)   // unique index
+    };
+    return storage.root;
+}
+
+// Get root or initialize if new
+var root = storage.root || initDb(storage);
+```
+
+### Creating Indexed Collections
+
+```js
+// Create index
+// createIndex(type, unique)
+// types: "string", "date", "integer", etc.
+// unique: true for unique keys, false for duplicates
+
+const usersByName = storage.createIndex("string", true);
+const usersByEmail = storage.createIndex("string", true);
+const logsByDate = storage.createIndex("date", false);
+```
+
+### Working with Data
+
+```js
+// Add to index
+root.usersByName.set("John Doe", userObject);
+root.logsByDate.set(new Date(), logEntry);
+
+// Get from index
+const user = root.usersByName.get("John Doe");
+
+// Delete from index
+root.usersByName.delete("John Doe");
+
+// Iterate
+for (const [key, value] of root.usersByName) {
+    console.log(key, value);
+}
+```
+
+### Registering Classes with Storage
+
+```js
+class Note {
+    constructor(text, date, id) {
+        this.id = id || Sciter.uuid();
+        this.date = date || new Date();
+        this.text = text;
+
+        // Add to storage indexes
+        let root = storage.root;
+        root.notesByDate.set(this.date, this);
+        root.notesById.set(this.id, this);
+
+        storage.commit();
+    }
+
+    delete() {
+        let root = storage.root;
+        root.notesByDate.delete(this.date, this);
+        root.notesById.delete(this.id);
+    }
+
+    static getById(id) {
+        return storage.root.notesById.get(id);
+    }
+
+    static all() {
+        return root.notesByDate;
+    }
+}
+
+// Register class so storage can restore prototypes
+storage.registerClass(Note);
+```
+
+### Transaction Management
+
+```js
+// Manual commit
+storage.commit();
+
+// Close database (on page unload)
+document.on("beforeunload", function() {
+    root = undefined;
+    storage.close();
+});
+```
+
+### Complete Example: Notes Database
+
+```js
+import * as Storage from "@storage";
+import * as env from "@env";
+
+function initDb(storage) {
+    storage.root = {
+        version: 1,
+        notesByDate: storage.createIndex("date", false),
+        notesById: storage.createIndex("string", true)
+    };
+    return storage.root;
+}
+
+var storage = Storage.open(env.path("documents") + "/notes.db");
+var root = storage.root || initDb(storage);
+
+export class Note {
+    constructor(text, date, id) {
+        this.id = id || Sciter.uuid();
+        this.date = date || new Date();
+        this.text = text;
+
+        let root = storage.root;
+        root.notesByDate.set(this.date, this);
+        root.notesById.set(this.id, this);
+        storage.commit();
+
+        document.post(new Event("new-note", { bubbles: true, data: this }));
+    }
+
+    delete() {
+        let root = storage.root;
+        root.notesByDate.delete(this.date, this);
+        root.notesById.delete(this.id);
+    }
+
+    static getById(id) {
+        return storage.root.notesById.get(id);
+    }
+
+    static all() {
+        return root.notesByDate;
+    }
+}
+
+storage.registerClass(Note);
+```
+
+### Storage Methods
+
+| Method | Description |
+|--------|-------------|
+| `Storage.open(path)` | Open or create database file |
+| `storage.close()` | Close database |
+| `storage.commit()` | Commit changes to disk |
+| `storage.createIndex(type, unique)` | Create indexed collection |
+| `storage.registerClass(Class)` | Register class for prototype restoration |
+| `storage.root` | Root object (initialize on first use) |
+
+### Index Methods
+
+| Method | Description |
+|--------|-------------|
+| `index.set(key, value)` | Add/update entry |
+| `index.get(key)` | Get entry by key |
+| `index.delete(key)` | Delete entry |
+| `index.delete(key, value)` | Delete specific entry (for non-unique) |
+| `for..of` | Iterate over entries |
 
 ---
 

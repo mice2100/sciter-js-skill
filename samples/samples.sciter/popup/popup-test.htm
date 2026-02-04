@@ -11,27 +11,13 @@
         margin-left:*; // aligned to the right
       }
       
-      #test > popup { 
-        background:rgb(248,248,248); 
-        size:200px 100px; 
-        //border: 1px solid; 
-        margin:0 6px;
-
-        //attr(window-frame): "solid";
-
-        attr(window-frame): "transparent";
-        border-radius:6px 6px 0 0;
-        box-shadow:0 0 10px rgba(64,64,64,0.5);
-      }
+      #test > popup { background:gold; size:200px 100px; border: 1px solid; margin:0 6px; }
       #test > popup > ol { overflow-y:auto; height:*; background:white; margin:0; }
       
       #test > popup > ol > li { 
         overflow-x:hidden;
         text-overflow:ellipsis;
-        width:*;
         white-space:nowrap; }
-
-
     
     </style>
     <script>
@@ -42,11 +28,13 @@
         div.popup(popupElement, {
           anchorAt: 9, // top/right 
           popupAt:7,    // top/left 
+          animationType: "slide",
+          animationAxis: "horizontal",
+          animationHeading: "start-to-end",
+          animationDuration: 100ms
         });
       }); 
     
-      document.$("#test").on("mouseenter", function() { console.log("mouseenter"); })
-                         .on("mouseleave", function() { console.log("mouseleave"); });
     
     </script>
   </head>

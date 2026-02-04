@@ -36,9 +36,9 @@
 
     body > div { width:*; height:*; }
 
-    body > div > header { flow:horizontal; border-spacing:0.25em; content-horizontal-align:center; }
-    body > div > header > input { font:inherit; background:transparent; border:none; color:#fff;  }
-    body > div > header > * { vertical-align:middle; }
+    body > div > header { flow:horizontal; border-spacing:0.25em; vertical-align:middle; horizontal-align:center; }
+
+    body > div > header > input { font:inherit; background:transparent; border:none;  color:#fff;  }
     
     frame { background:none; prototype: Pager url(pager.js); }
 
@@ -51,9 +51,15 @@
 
     <script>
 
+       //document.on("ready", function() {
+       //  document.$("frame|pager").pager.loadFile(__DIR__ + "docs/test-basic.htm");
+       //});
+
        document.on("paginationready","frame|pager", function(e,pel) {
-         pel.pager.loadFile(__DIR__ + "docs/doc.htm");
+         pel.pager.loadFile(__DIR__ + "docs/test-table.htm");
        });
+
+       //["on paginationready"](evt) {
 
     </script>
     
@@ -62,7 +68,7 @@
   <aside>
     <header>Printer:</header>
     <div #printers></div>
-    <button #print>Generate PDF</button>
+    <button #print>Print</button>
   </aside>
   <div>
     <header><span>Page</span><input|integer #current-page value=1 step=1 min=1 max=1>

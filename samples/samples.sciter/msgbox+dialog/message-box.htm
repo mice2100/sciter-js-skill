@@ -1,6 +1,4 @@
-<html window-icon="window-icon.svg"
-      window-width"800px"
-      window-height"600px">
+<html>
     <head>
         <title>Test</title>
         <style>
@@ -8,7 +6,7 @@
 button { display:block; margin:1em; }
 
         </style>
-        <script|module>
+        <script>
 
 
 document.on("click","button#info", function() 
@@ -26,7 +24,8 @@ document.on("click","button#alert", function()
 
 document.on("click","button#error", function() 
 {
-  var r = Window.this.modal(<error><p>Don't worry</p><p>That is just a demo of error report.</p></error>);
+  var r = Window.this.modal(<error><p>Don't worry</p>
+                      <p>That is just a demo of error report.</p></error>);
   console.log(r);
 });
 
@@ -46,7 +45,7 @@ document.on("click","button#buttons", function()
 document.on("click","button#prompt", function() 
 {
   var r = Window.this.modal(
-    <dialog|question width="480px" alignment="-8">
+    <question>
       <content>
         <form>
           <text>What is your name?</text>
@@ -57,9 +56,10 @@ document.on("click","button#prompt", function()
          <button id="ok" role="default-button">Ok</button>
          <button id="no" role="cancel-button">Don't know</button>
       </buttons>
-    </dialog>);
+    </question>);
   console.log(r);
 });
+
 
 document.on("click","button#styling", function() 
 {

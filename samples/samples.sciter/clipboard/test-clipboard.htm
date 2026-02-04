@@ -53,7 +53,7 @@ document.on("click", "button#read", function() {
 
 /// On htmlarea paste event
 document.on("^exec:edit:paste", "htmlarea", function(event, element) {
-  //element.innerText = "";
+  element.innerText = "";
 
   log(Clipboard.read());
 });
@@ -76,7 +76,7 @@ function log(data)
   <button #image>Put Image</button>
   <button #imageAndText>Put Image and Text</button>
 
-  <htmlarea><text>Try to paste something here</text></htmlarea>
+  <htmlarea>Try to paste something here</htmlarea>
   <h4>Clipboard content</h4>
   <pre#content />
 </body>

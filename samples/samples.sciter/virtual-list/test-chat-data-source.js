@@ -40,7 +40,9 @@ export function reset(n = 500) {
         messages.push({
             id: uid,
             html: `<div.text>Test Message ${index} id: ${uid} <p>dsa d asd d sadas as sa dsad 🥰 ds sdasd sad sd sadsadd</p>
-            <p> sddsaddsa sdad</p></div>`,
+            <p> sddsaddsa sdad sadsadsdsadadsadsadsaddssdsdadadd dsad sad sadad sadasdsa dsa das sad sadsa sdasd sad sd sadsadd sddsaddsa sdad sadsadsdsadadsadsadsaddssdsdadadd</p>
+            <p>dsad sad sadad sadasdsa dsa das sad sadsa</p>
+            <p>USDdsa DADA RFDGDGFDGGFLSAD SADLKDSA</p></div>`,
             avatar: avatars[index % avatars.length],
             mine: index != 0 && ((index + 1) % 3) == 0,
         });

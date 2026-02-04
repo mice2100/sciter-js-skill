@@ -62,6 +62,7 @@ body {
 
   form {
     flow: row(label,input select textarea div);
+    horizontal-align:center;
     border-spacing:0.5em 0.25em;
   }
 

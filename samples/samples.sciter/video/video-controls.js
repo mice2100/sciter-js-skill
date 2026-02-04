@@ -23,9 +23,6 @@ export class VideoControls extends Element {
 
       var m = this.video.duration;
       var t = this.video.position;
-
-      console.log(m,t);
-
       var [th,tm,ts] = this.hms(t);
       var [mh,mm,ms] = this.hms(m);
       var vol = this.get_vlog10_idx(this.video.audioVolume);
@@ -34,9 +31,9 @@ export class VideoControls extends Element {
 
       content = <div class="bar" shown={this.barIsShown}>
             <button class="command" mode={this.status}/>
-            <input type="hslider" class="position" min="0.0" max={m} value={t} />
+            <input type="hslider" class="position" min="0.0" max={m} state-value={t} />
             <span class="times">{times}</span>
-            <input type="hslider" class="volume" min="1" max="10" value={vol} />
+            <input type="hslider" class="volume" min="1" max="10" state-value={vol} />
       </div>;
     }
 
@@ -80,28 +77,28 @@ export class VideoControls extends Element {
     }
   }
 
-  ["on play"]() { 
-    this.componentUpdate({ status: "play" });
-  }
+  //onready() {}
 
-  ["on pause"]() { 
-    this.componentUpdate({ status: "pause" });
+  ["on video-start"]() { 
+    if(this.status == "initial") {
+      this.video.stop();
+      this.componentUpdate({ status: "stopped" });
+    } else
+      this.componentUpdate({ status: "playing" });
   }
-
-  ["on end"]() { 
-    this.componentUpdate({ status: "end" });
+  ["on video-stop"]() { 
+    this.componentUpdate({ status: this.video.isEnded ? "ended" : "stopped" });
   }
 
   ["on mouse-enter"]() {
     this.showBar(true);
   }  
-
   ["on mouse-leave"]() {
     this.showBar(false);
   }  
 
   ["on input at input.position"](evt,slider) {
-    this.video.pause();
+    this.video.stop();
     this.video.position = slider.value;
   }
 
@@ -116,9 +113,9 @@ export class VideoControls extends Element {
 
   ["on click at .command"]() {
     switch( this.status ) {
-      case "play":  this.video.pause(); break;
-      case "pause": this.video.play(); break;
-      case "end":   this.video.position = 0; this.video.play(); break;
+      case "playing": this.video.stop(); break;
+      case "stopped": this.video.play(); break;
+      case "ended": this.video.position = 0; this.video.play(); break;
     }
   }
 

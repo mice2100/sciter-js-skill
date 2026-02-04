@@ -7,8 +7,8 @@ export class Pager extends Element
   {
     Pager.instance = this;
     var printers = document.$("div#printers");
-    //for(var printer of this.pager.printers()) 
-    //  printers.append(<button|radio(printer) value={printer.id} state-checked={printer.isDefault}>{printer.name}</button>);
+    for(var printer of this.pager.printers()) 
+      printers.append(<button|radio(printer) value={printer.id} state-checked={printer.isDefault}>{printer.name}</button>);
   }
 
   // template is loaded, page size is known - pager is ready to accept document:
@@ -26,12 +26,12 @@ export class Pager extends Element
   }
 }
 
-/*document.on("change", "div#printers", function(evt,form) { 
+document.on("change", "div#printers", function(evt,form) { 
   Pager.instance.pager.selectPrinter( form.value.printer ); 
-});*/
+});
   
 document.on("click", "button#print", function() { 
-  Pager.instance.pager.savePDF({filePath:__DIR__ + "test.pdf"});
+  Pager.instance.pager.print(); 
 });
 
 document.on("change", "#current-page", function(evt,pageNo) { 

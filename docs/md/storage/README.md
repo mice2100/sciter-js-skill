@@ -23,21 +23,15 @@ object, root object in the storage. Read/write property.
 
 ## Methods
 
-### open
+### open()
 
 ```js
-Storage.open(filepath : string [,allowWrite: true [, password: string ]] ) : storage | null
+Storage.open(filename : string [,allowWrite: true] ) : storage | null
 ```
 
-Static method. Opens storage and returns an instance of Storage object. 
+Static method. Opens storage and returns an instance of Storage object. If *allowWrite* is *false* then storage is opened in read-only mode. 
 
-Parameters:
-
-* _filepath_ - string, required. Absolute path in local filesystem of the DB file.
-* _allowWrite_ - boolean, optional. If it is _false_ then storage is opened in read-only mode.
-* _password_ - string, optional. If _password_ is provided then the function creates and opens file in encrypted mode.
-
-### close
+### close()
 
 ```js
 storage.close()
@@ -46,7 +40,7 @@ storage.close()
 Closes underlying Storage. Commits all data before closing. After closing the storage all persistent objects that are still in use are set to non-persistent state.
 
 
-### commit
+### commit()
 
 ```js
 storage.commit()
@@ -58,7 +52,7 @@ Commits (writes) all persistent objects reachable from its root into storage. Do
 Use this method after complex or critical data modifications.
 :::
 
-### createIndex
+### createIndex()
 
 ```js
 storage.createIndex(type : string [, unique: bool]) returns: Index | null
@@ -75,7 +69,7 @@ parameters:
   + "string" 
 - *unique*, boolean, if _true_ then the index supports only unique keys. Default value for  is *true*.
 
-### registerClass
+### registerClass()
 
 ```js
 storage.registerClass(cls)

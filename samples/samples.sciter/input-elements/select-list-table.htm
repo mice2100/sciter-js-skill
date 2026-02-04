@@ -15,7 +15,7 @@
           border:1px solid grey;
         }
         select option { flow:table-row; }
-        select option span { display:table-cell; border:1px solid grey; padding:4px 8px; }
+        select option span { border:1px solid grey; padding:4px 8px; }
         select option:current span:last-child { background:gold; }
         select option span:nth-child(2) 
         { 
@@ -29,7 +29,6 @@
 	<body>
     <p>Table as &lt;select|list&gt;, keyboard navigation is operational</p>
 		<select|list multiple>
-       <tbody>
         <option value="1">
           <span>Option 1</span>
           <span>*Short*</span>
@@ -45,7 +44,6 @@
           <span>*Short*</span>
           <span>123456</span>
         </option>
-      </tbody>
 		</select>
 	</body>
 </html>

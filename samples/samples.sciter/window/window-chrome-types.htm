@@ -33,18 +33,11 @@ document.on("click","button#window-frame-extended-blurbehind", () => {
   });
 });
 
-document.on("click","button#window-frame-extended-naked", () => {
-  var wnd = new Window({ 
-      url   : __DIR__ + "chrome-types/window-frame-extended-naked.htm", 
-      state : Window.WINDOW_SHOWN
-  });
-});
-
 
 document.on("click","button#window-frame-solid", () => {
   var wnd = new Window({ 
       url   : __DIR__ + "chrome-types/window-frame-solid.htm", 
-      state : Window.WINDOW_SHOWN,
+      state : Window.WINDOW_SHOWN
   });
 });
 
@@ -69,7 +62,6 @@ document.on("click","button#window-frame-tool", () => {
       type  : Window.TOOL_WINDOW,
       url   : __DIR__ + "chrome-types/window-frame-tool.htm", 
       state : Window.WINDOW_SHOWN,
-      parent: Window.this,
   });
 });
 
@@ -81,8 +73,7 @@ window-frame="...":
 <ul>
     <li><button#window-frame-default>window-frame="default"</button></li>
     <li><button#window-frame-extended>window-frame="extended"</button>
-        <button#window-frame-extended-blurbehind>window-frame="extended" window-blurbehind="dark"</button>
-        <button#window-frame-extended-naked>window-frame="extended" no chrome buttons</button></li> 
+        <button#window-frame-extended-blurbehind>window-frame="extended" window-blurbehind="dark"</button></li> 
     <li><button#window-frame-solid>window-frame="solid"</button></li> 
     <li><button#window-frame-solid-with-shadow>window-frame="solid-with-shadow"</button> + min/maxSize demo</li>
     <li><button#window-frame-transparent>window-frame="transparent"</button></li>

@@ -60,11 +60,7 @@ export function colorize() {
       "include": true, "like": true, "class": true, "of": true,
       "this": true, "delete": true, "with": true, "extends": true,
       "await": true, "async": true, "yield": true, "import": true,
-      "export": true, "extern": true,
-      "#include": true, "#import": true, "#if": true, "#ifdef": true,"#ifndef": true,"#endif": true,"#else": true,"#elif": true,"#define": true,"#undef": true,
-      "void": true, "char": true, "bool": true, "int": true, "long": true, "int8": true, "int16": true, "int32": true, "int64": true,
-      "jsvalue":true, "uint": true, "uint8": true, "uint16": true, "uint32": true, "uint64": true,
-      "float": true, "double": true,"struct": true, "enum": true,"typedef": true,
+      "export": true,
     };
 
     const LITERALS = {"true": true, "false": true, "null": true, "undefined": true};

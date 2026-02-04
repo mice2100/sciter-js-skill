@@ -38,22 +38,13 @@ new Graphics.Image(width, height, painter(graphics) [,initColor]);
 constructs new Image by rendering arbitrary drawing on the bitmap.
 
 parameters:
-- _width_, _height_ - [Length](../JS/units/Length), dimensions of the image;
+- _width_, _height_ - dimensions of the image;
 - _painter_ - function(graphics), drawing function to produce its content.
 - _initColor_ - [Color](Color), initial color to initialize bitmap bits.
 
 :::note
-Physical pixel size of created image depends on current screen resolution. If you need an image of exact pixels size use `ppx` length units: 
-```js
-new Graphics.Image(10ppx, 10ppx, ... ); // or
-new Graphics.Image(Length.ppx(x), Length.ppx(y), ... ); 
-```
-:::
-
-:::note
 Resolution of the graphics in _painter_ is set to 1 bitmap pixel. 
 :::
-
 
 ```js
 new Graphics.Image(width, height, element [,initColor])
@@ -61,7 +52,7 @@ new Graphics.Image(width, height, element [,initColor])
 new Image by rendering a DOM element on the bitmap.
 
 parameters:
-- _width_, _height_ -  [Length](../JS/units/Length), dimensions of the image;
+- _width_, _height_ - dimensions of the image;
 - _element_ - [Element](../DOM/Element) to render;
 - _initColor_ - [Color](Color), initial color to initialize bitmap bits.
 
@@ -99,32 +90,7 @@ image.compose(src, op, [dstx,dsty[,srcx,srcy,srcw,srch]]): Image
 compose this image with _src_ image, parameters:
 
 - _src_ - image to compose with;
-- _op_, string, composition method, is one of: 
-    * "src-over",
-    * "dst-over",
-    * "src-in",
-    * "dst-in",
-    * "src-out",
-    * "dst-out",
-    * "src-atop",
-    * "dst-atop",
-    * "xor",
-    * "copy",
-    * "multiply",
-    * "screen",
-    * "overlay",
-    * "darken",
-    * "lighten",
-    * "difference",
-    * "exclusion",
-    * "hue",
-    * "saturation",
-    * "luminosity",
-    * "color",
-    * "soft-light",
-    * "hard-light",
-    * "color-burn",
-    * "color-dodge"
+- _op_, string, composition method, is one of: "src-over", "dst-over", "src-in", "dst-in", "src-out", "dst-out", "src-atop", "dst-atop", "xor", "copy".
 
 Returns composed image. 
 

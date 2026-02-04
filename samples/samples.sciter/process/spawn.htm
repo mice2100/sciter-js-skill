@@ -15,17 +15,14 @@
           const green = "\x1b[32m";
           const reset = "\x1b[0m";
 
-          var tracert;
-
           async function pipeReader(pipe, name) {
             try {
-              while(pipe) {
+              reading: while(pipe) {
                 let text = await pipe.read(); 
                 text = sciter.decode(text);
                 terminalView.write(text);
               }
             } catch(e) {
-              pipe = null;
               if(e.message != "socket is not connected")
                  //console.error(e.message);
                  terminalView.write(red + e.message + reset);
@@ -35,7 +32,7 @@
           document.on("click", "#exec", async function() {
             var cmd = env.PLATFORM == "Windows" ? "tracert" : "traceroute";
             try {
-              tracert = sys.spawn([cmd,"sciter.com"], { stdout:"pipe", stderr:"pipe"} );
+              const tracert = sys.spawn([cmd,"sciter.com"], { stdout:"pipe", stderr:"pipe"} );
               pipeReader(tracert.stdout,"stdout");
               pipeReader(tracert.stderr,"stderr");
               await tracert.wait();
@@ -43,12 +40,6 @@
             } catch (e) {
               terminalView.write(red + e.message + reset);
             }
-            tracert = null;
-          });
-
-          document.on("beforeunload", function() {
-            if(tracert)
-              tracert.kill();
           });
 
         </script>

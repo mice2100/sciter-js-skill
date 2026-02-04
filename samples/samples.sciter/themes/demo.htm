@@ -32,8 +32,8 @@
       document.on("input", "form#config", function (evt, form) {
         const config = form.value;
         const frame = document.$("frame");
-        frame.frame.document.attributes["ui-size"] = config.size;
-        document.attributes.theme = config.mode;
+        frame.frame.document.attributes["ui-size"] = form.value.size;
+        document.attributes.theme = form.value.mode;
 
         if (theme != config.theme) {
           theme = config.theme;

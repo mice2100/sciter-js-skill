@@ -25,11 +25,6 @@
 
         <style>
 
-html {
-  -test-custom-prop:42;
-  var(test-custom-var):42;
-}
-
 form {
   border:1px solid;
   flow: row(label, input output);
@@ -151,11 +146,8 @@ document.on("click", "button#task-start", function(evt, button) {
   button.state.disabled = true;
 
   function onDone(n) {
-    console.log("DONE 1");
     progress.value = n;
-    console.log("DONE 2");
     button.state.disabled = false;
-    console.log("DONE 3");
   }
 
   function onProgress(n) {
@@ -244,13 +236,6 @@ function testError() {
 }
 
 testError();
-
-document.body.append(<p>{nativeObject.toString()}</p>);
-
-for(const item of nativeObject) {
-  document.body.append(<text>iteration {item}</text>);
-}
-
 
         </script>
     </head>

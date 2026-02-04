@@ -3,7 +3,7 @@
   :root
   {
     width: max-content;
-    height: max-content;
+    height: auto;
     white-space: nowrap;
     font:system;
   }
@@ -26,7 +26,7 @@
   td 
   {
     width: 3ch;
-    height: 3ch;
+    height: *;
     text-align:center;
     vertical-align:middle;
     overflow:visible;

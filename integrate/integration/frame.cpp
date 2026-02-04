@@ -119,13 +119,6 @@ public:
     return true;
   }
 
-  bool nextItem(int& n, std::string& text) {
-    if (n >= 10) return false;
-    text = std::string("item") + char('A' + n);
-    ++n;
-    return true;
-  }
-
   SOM_PASSPORT_BEGIN(NativeObject)
     SOM_FUNCS(
       SOM_FUNC(toString),
@@ -137,7 +130,6 @@ public:
       SOM_PROP(counter),
       SOM_VIRTUAL_PROP(vcounter, ref_counter, set_ref_counter)
     )
-    SOM_ITEM_NEXT(nextItem)
     SOM_PASSPORT_END
 };
 
@@ -151,7 +143,7 @@ int sub(int a, int b) { return a - b; }
 #endif
 class frame: public sciter::window {
 public:
-  frame() : window(SW_MAIN | SW_ENABLE_DEBUG) {}
+  frame() : window(SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN | SW_ENABLE_DEBUG) {}
 
   int counter = 0;
 
@@ -272,14 +264,6 @@ public:
   virtual bool handle_event(HELEMENT, BEHAVIOR_EVENT_PARAMS& params) {
     sciter::dom::element target = params.heTarget;
     switch (params.cmd) {
-
-      case DOCUMENT_CREATED:
-      {
-        // adding new instance of NativeObject into namespace of each created document 
-        this->set_root_document_variable("nativeObject", sciter::value::wrap_asset(new NativeObject()));
-        return true;
-      }
-
       case BUTTON_CLICK:
         if (target.test("button#test-script-func-1")) {
           // call free function, passing integer value:
@@ -316,7 +300,6 @@ public:
   }
 };
 
-
 #include "resources.cpp"
 
 int uimain(std::function<int()> run ) {
@@ -340,7 +323,7 @@ int uimain(std::function<int()> run ) {
   // *before* document will have its DOM elements.
   sciter::window::set_init_script("globalThis.initializedByInitScript = 42");
 
-  sciter::window::set_shared_variable("initializedByCode", 0xAF);
+  sciter::window::set_variable("initializedByCode", 0xAF);
 
   sciter::om::hasset<frame> pwin = new frame();
 
@@ -399,15 +382,6 @@ int uimain(std::function<int()> run ) {
     //sciter::value insertText = edit.get_item("insertText");
     //insertText.call(sciter::value(" foo-bar"));
 
-  }
-
-  {
-    // custom CSS prop, starts with single '-'
-    sciter::dom::element document = pwin->root();
-    auto vv = document.get_style_attribute("-test-custom-prop");
-    assert(vv == WSTR("42"));
-    vv = document.get_style_attribute("var(test-custom-var)");
-    assert(vv == WSTR("42"));
   }
 
 

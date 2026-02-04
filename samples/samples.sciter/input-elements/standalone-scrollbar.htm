@@ -2,8 +2,8 @@
     <head>
         <script>
 
-document.on("change", "widget", function(evt, widget) {
-  console.log("scroll change", widget.value);
+document.$("widget").on("change", function(evt) {
+  console.log("scroll change", this.value);
 });
 
         </script>
@@ -13,7 +13,6 @@ document.on("change", "widget", function(evt, widget) {
 <h2>Standalone scrollbar control</h2>
 
 <widget|vscrollbar />
-<widget|hscrollbar />
 
     </body>
 </html>

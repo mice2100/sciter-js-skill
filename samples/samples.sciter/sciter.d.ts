@@ -181,24 +181,3 @@ export function setTimeout(func: Function, milliseconds: Number ): any;
 export function clearTimeout(timeoutId: any );
 export function setInterval(func: Function, milliseconds: Number ): any;
 export function clearInterval(timeoutId: any );
-
-declare interface Window {
-    
-}
-
-declare namespace Window {
-
-    const this: Window;
-    const share : Object;
-    const all : Window[];
-    const monitors : number;
-
-    function screenBox(monitor: number, what: string, part: string, asPpx?: boolean);
-
-    const ticks : number;
-
-    function post(event: Event);
-    function send(event: Event) : boolean;
-
-    function elementAt(x: number, y: number) : Element;
-}

@@ -3,10 +3,6 @@
         <title>behavior:virtual-list</title>
         <style>
 
-body {
-  overflow:auto;
-}
-
 table {
   size:*;
   border:1px solid #ccc;
@@ -26,7 +22,7 @@ table > thead {
  }
 table > thead > tr > th:nth-child(1) { width: 8em; }
 table > thead > tr > th:nth-child(2) { width: 8em; }
-table > thead > tr > th:nth-child(3) { width: *; overflow-x:hidden;}
+table > thead > tr > th:nth-child(3) { width: *; }
 
 table > tbody > tr > td { white-space: nowrap; }
 table > tbody > tr > td:nth-child(3) { width: *; overflow-x:hidden; }
@@ -135,7 +131,7 @@ class Tape extends Element {
     <th>column 2</th>
     <th>column 3</th>
   </thead>
-  <tbody #test>
+  <tbody>
   </tbody>
 </table>
 

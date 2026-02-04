@@ -25,64 +25,33 @@ and so on.
 
 ## Static methods
 
-### openFile()
-
-```js
-  Zip.openFile(path:string [,password]): Zip
-````
+### `Zip.openFile(path:string [,password]): Zip`
 
 Opens zip file for reading. Returns instance of Zip class.
 
-### openData()
-
-```js
-Zip.openData(data:ArrayBuffer[,password]): Zip
-```
+### `Zip.open(data:ArrayBuffer[,password]): Zip`
 
 Opens zip blob for reading. Returns instance of Zip class.
 
-### toData()
+### ~~`Zip.create(provider[,password]): ArrayBuffer`~~
 
-```js
-Zip.toData(provider[,password]): ArrayBuffer
-```
+~~Creates zipped blob from items supplied by _provider_ function. _provider_ has the following signature:~~
 
-Creates zipped blob from items supplied by _provider_ function. _provider_ has the following signature:
-
-```js
-function(n) : [localPath:string, itemData: ArrayBuffer [,fileAttributes:int] | null
-```
-
-### toFile()
-
-```js
-Zip.toFile(path:string, provider[,password]): true|false
-```
-
-Creates zip file from items supplied by _provider_ function. _provider_ has the following signature:
-
-```js
-function(n) : [localPath:string, itemData: ArrayBuffer [,fileAttributes:int] | null
-```
+~~`function(n) : [localPath:string, itemData: ArrayBuffer [,fileAttributes:int] | null`~~
 
 ## Properties:
 
-### length
-
-`zip.length` - reports total number of items in the zip;
+* `zip.length` - reports total number of items in the zip;
 
 ## Methods:
 
-### zip.item()
+### `zip.item(index:int) ZipItem`
 
-```js
-zip.item(index:int | path:string) ZipItem
-```
+Fetches zip item by index. Index must be in range [0 .. zip.length).
 
-Fetches zip item either:
+### `zip.item(path:string) ZipItem`
 
-* by index that must be in range [0 .. zip.length).
-* or by its path (local to the zip).
+Fetches zip item by its path (local to the zip).
 
 ## (iterator)
 

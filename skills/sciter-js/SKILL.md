@@ -1,6 +1,6 @@
 ---
 name: sciter-js
-description: Sciter.js desktop application development. Use for: Sciter.js, Sciter, SciterJS, scapp, usciter, sciter-js-sdk, Sciter UI, Sciter desktop apps, HTML/CSS/JS apps with scapp, Sciter C++ integration, Sciter components, Sciter Graphics, Reactor, JSX, flow layout, flex units, element painting, custom drawing. Supports both pure JS development (with scapp) and C++ integration modes.
+description: Sciter.js 5.0.3.11 desktop application development. Use for: Sciter.js, Sciter, SciterJS, scapp, usciter, sciter-js-sdk, Sciter UI, Sciter desktop apps, HTML/CSS/JS apps with scapp, Sciter C++ integration, Sciter components, Sciter Graphics, Reactor, JSX, flow layout, flex units, element painting, custom drawing. Features: richtext editor, @storage database, tray icon, FolderView, CSS grid, C++/JS bridging. Supports both pure JS development (with scapp) and C++ integration modes.
 ---
 
 # Sciter.js Skill
@@ -266,6 +266,38 @@ std::vector<sciter::value> vec;
 sciter::value arr = sciter::value::from_list(vec);
 ```
 
+## Global Window Methods
+
+**Tray Icon (System Tray):**
+```js
+// Set tray icon
+Window.this.trayIcon({
+    image: await Graphics.Image.load("icon.svg"),
+    text: "Tooltip text"
+});
+
+// Update tooltip
+Window.this.trayIcon({ text: "Updated" });
+
+// Remove icon
+Window.this.trayIcon("remove");
+
+// Get icon position
+const [x, y, w, h] = Window.this.trayIcon("place");
+```
+
+**Tray Icon Events:**
+```js
+Window.this.on("trayiconclick", (evt) => {
+    // Single click on tray icon
+    const { screenX, screenY, buttons } = evt.data;
+});
+
+Window.this.on("trayicondoubleclick", (evt) => {
+    // Double click on tray icon
+});
+```
+
 ## JS to C++ Communication
 
 ### Calling Native Functions
@@ -303,12 +335,141 @@ virtual bool on_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
 }
 ```
 
+## Built-in Behaviors Overview
+
+Sciter provides built-in behaviors for common UI components. See `assets/behaviors-reference.md` for complete documentation of all behaviors.
+
+### Key Behaviors
+
+| Element | Behavior | Description |
+|---------|----------|-------------|
+| `<htmlarea>` | `behavior:richtext` | Rich text editor (NEW in 5.0) |
+| `<frame>` | `behavior:frame` | Document container |
+| `<input type="text">` | `behavior:edit` | Text editing |
+| `<select>` | `behavior:select` | Dropdown |
+| `<widget virtual-list>` | `behavior:virtual-list` | Virtual list |
+| `<button>` | `behavior:button` | Button |
+
+### Window Methods and Events
+
+**Tray Icon (System Tray):**
+```js
+// Set tray icon
+Window.this.trayIcon({
+    image: await Graphics.Image.load("icon.svg"),
+    text: "My App - " + new Date()
+});
+
+// Update
+Window.this.trayIcon({ text: "Updated text" });
+
+// Remove
+Window.this.trayIcon("remove");
+
+// Get position
+const [x, y, w, h] = Window.this.trayIcon("place");
+
+// Events
+Window.this.on("trayiconclick", (evt) => {
+    const { screenX, screenY, buttons } = evt.data;
+    // Show popup menu
+    new Window({
+        type: Window.POPUP_WINDOW,
+        url: "tray-popup.htm",
+        x: screenX,
+        y: screenY
+    });
+});
+
+Window.this.on("trayicondoubleclick", (evt) => {
+    Window.this.state = Window.WINDOW_SHOWN;
+});
+```
+
+## File System Components
+
+### FolderView Component
+
+Built-in file browser component for navigating directories:
+
+```js
+import * as FolderView from "@sys/fs/folder-view.js";
+
+// Usage in HTML:
+// <folder-view path="/path/to/folder" />
+```
+
+**Features:**
+- Directory navigation with path breadcrumbs
+- File filtering
+- Keyboard navigation (Enter, Escape, Arrow keys)
+- Events: `folder-change`, `file-activate`
+
+## Storage Module (`@storage`)
+
+Persistent key-value storage with indexing for local data persistence:
+
+```js
+import * as Storage from "@storage";
+import * as env from "@env";
+
+// Open database
+const storage = Storage.open(env.path("documents") + "/app.db");
+
+// Initialize with indexes
+function initDb(storage) {
+    storage.root = {
+        usersByName: storage.createIndex("string", true),  // unique
+        logsByDate: storage.createIndex("date", false)     // non-unique
+    };
+    return storage.root;
+}
+
+var root = storage.root || initDb(storage);
+
+// Use indexes
+root.usersByName.set("John", { name: "John", age: 30 });
+const user = root.usersByName.get("John");
+
+// Register classes for prototype restoration
+storage.registerClass(User);
+storage.commit();
+```
+
+## CSS Enhancements (Version 5.0)
+
+### Grid Layout
+
+```css
+.container {
+    flow: grid(
+        1 1 1,
+        2 5 3,
+        4 4 4
+    );
+    /* 3x3 template, cells span multiple grid cells */
+}
+```
+
+### Flex Units Update
+
+Flex units now work seamlessly with all layout modes:
+
+```css
+.child {
+    width: *;        /* Fill remaining space */
+    width: 0.7*;     /* 70% of free space */
+    size: *;         /* Both width and height */
+}
+```
+
 ## Asset References
 
 - **CSS Reference**: See `assets/css-reference.md` for complete Sciter CSS syntax
+- **Behaviors**: See `assets/behaviors-reference.md` for all built-in behaviors (richtext, frame, edit, select, etc.)
 - **SOM Patterns**: See `assets/som-patterns.md` for advanced SOM_PASSPORT usage
 - **Project Template**: See `assets/template/` for complete scaffolding template
-- **Runtime API**: See `assets/runtime-api-reference.md` for `@sciter`, `@sys`, `@env`, `@debug` modules
+- **Runtime API**: See `assets/runtime-api-reference.md` for `@sciter`, `@sys`, `@env`, `@debug`, `@storage` modules
 - **Graphics API**: See `assets/graphics-api-reference.md` for Graphics, Color, Path, Image, Brush
 - **Component & Painting**: See `assets/component-painting-reference.md` for Element extension and custom painting
 - **Reactor/JSX**: See `assets/reactor-component-reference.md` for Reactor components and JSX
@@ -410,6 +571,31 @@ env.path("documents");   // Documents folder
 env.path("downloads");   // Downloads folder
 env.path("appdata");     // App data folder
 env.drives();            // -> ["C:", "D:"] on Windows
+```
+
+### Module `@storage` (NEW in 5.0)
+
+Persistent key-value storage with indexing:
+
+```js
+import * as Storage from "@storage";
+
+// Open database
+const storage = Storage.open(env.path("documents") + "/app.db");
+
+// Initialize with indexes
+storage.root = {
+    usersByName: storage.createIndex("string", true),  // unique
+    logsByDate: storage.createIndex("date", false)     // non-unique
+};
+
+// Use indexes
+storage.root.usersByName.set("John", { name: "John" });
+const user = storage.root.usersByName.get("John");
+
+// Register classes for prototype restoration
+storage.registerClass(User);
+storage.commit();
 ```
 
 ### Module `@debug`
@@ -1012,6 +1198,45 @@ endif()
 find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 ```
+
+### Alternative: gsciter (Universal Browser Project)
+
+For a simpler integration approach, consider using the `gsciter` project pattern from `integrate/gsciter/`:
+
+**Key features:**
+- Single source file works across all platforms (Windows, macOS, Linux)
+- Resources packaged as compiled archive
+- Simple, minimal C++ code (~60 lines)
+- Ideal for browser-style applications
+
+**Basic structure:**
+```cpp
+#include "sciter-x-window.hpp"
+
+class gSciter: public sciter::window {
+public:
+    gSciter() : window(SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN) {}
+};
+
+int uimain(std::function<int()> run) {
+    // Enable features
+    ::SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES,
+                      ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
+
+    // Load resources
+    sciter::archive::instance().open(aux::elements_of(resources));
+
+    // Create and load window
+    sciter::om::hasset<gSciter> pwin = new gSciter();
+    pwin->load(WSTR("this://app/default.htm"));
+
+    return run();
+}
+```
+
+**When to use gsciter vs full template:**
+- **gsciter**: Simple browser-style apps, minimal C++ needs
+- **Full template**: Complex native integration, custom behaviors, multiple windows
 
 ## Resource Loading
 

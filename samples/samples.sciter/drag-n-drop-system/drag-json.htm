@@ -21,11 +21,10 @@
     <script>
     
       document.$("form").on("mousedragrequest", function(evt) {
-        let data = { json: this.value };
-
-        console.log(data);
+        var data = { json: this.value };
         
         var r = Window.this.performDrag( data, "copy", this );
+        //co.println(r);
         return true;
       });
      

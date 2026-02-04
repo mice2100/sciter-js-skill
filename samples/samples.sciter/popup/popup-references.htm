@@ -12,7 +12,6 @@
       border-radius: 6px; 
       box-shadow: 0px 1px 5px #888;
       margin:3px; // here it is offset of the popup from anchor
-      padding:4px;
     }
     
     div#anchor
@@ -46,9 +45,9 @@
       });
       
       // close popup on mouseup inside it
-      //document.on("^mouseup", "popup", function(evt,popup) {
-      //  popup.state.popup = false;
-      //})
+      document.on("^mouseup", "popup", function(evt,popup) {
+        popup.state.popup = false;
+      })
       
       
     </script>
