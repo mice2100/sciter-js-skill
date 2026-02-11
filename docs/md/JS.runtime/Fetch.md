@@ -12,8 +12,18 @@ Where _options_ is an object that may have following properties:
 * `method` - string, "GET" | "POST" | etc. 
 * `headers` - object ( string->string map ), request headers. 
 * `cache` - string, "no-cache" | "reload" | "default".
-* `body` - see [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 * `sync` - boolean, Sciter's extras, when set to _true_ fetch performs synchronous data retrieval. Synchronous fetch is useful to get local data - local file or resource content.
+* `body` is one of: 
+   - instance of a string;
+   - instance of an ArrayBuffer or [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray);
+   - instance of a File;
+   - an object representing form data; such an object may contain fields of the following types:
+     
+     * string;
+     * ArrayBuffer annotated with  `mimeType: string` and `fileName: string` properties; 
+     * instance of File object optionally annotated with  `mimeType: string` and `fileName: string` properties; 
+     
+     If such form data object contains an ArrayBuffer and/or a File then the engine sends request encoded as `multipart/form-data` otherwise it will be sent as `application/x-www-form-urlencoded`.
 
 ## Request object
 

@@ -27,6 +27,16 @@ Note: in Sciter.JS class `Document` extends class [`Element`](../Element) class,
 `document === document.documentElement` in Sciter
 :::
 
+### location
+
+[URL](../../JS.runtime/URL), location of the document.
+
+
+### URL
+
+string, location of the document as a string.
+
+
 ### readyState
    
 string, values:

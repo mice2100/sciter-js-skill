@@ -93,7 +93,6 @@ This behavior knows about:
 Other than standard set of events (mouse, keyboard, focus) behavior:select generates:
 
 * `"change"` event, generated when user changes selection of the select (click on one of options). Posted event.
-* `"changing"` event, selection is about to change. Synchronous event.
 * `"expanded"` event, group option was expanded by the user;
 * `"collapsed"` event, group option was collapsed by the user;
 

@@ -46,6 +46,26 @@ string, read/write, style of the text including fonts, alignment, borders and ba
 
 string, read/write, class name of the text in document's CSS styles.
 
+### borderBox
+
+[Rect](Rect.md), read only, returns border outline box. Border box can be different from contentBox if borders and/or paddings are defined in style.
+
+:::note
+Returned `text.borderBox.origin` point may have negative values as border box is relative to element's content origin.
+:::
+
+### paddingBox
+
+[Rect](Rect.md), read only, returns padding outline box. Padding box can be different from contentBox if paddings are defined in style.
+
+### contentBox
+
+[Rect](Rect.md), read only, returns content outline box. 
+
+:::note
+`text.contentBox.origin` is always `Point(0,0)`
+:::
+
 ## Methods:
 
 ### width()

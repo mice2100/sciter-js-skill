@@ -29,7 +29,7 @@ where `params` is an object with properties:
   + `Window.FRAME_WINDOW` - default window type
   + `Window.DIALOG_WINDOW`
 
-+ `parent` : Window - optional, instance of parent (owner window). When owner will be closed or minimized this window will be closed/minimized too.
++ `parent` : Window - optional, instance of parent (owner window). When owner is closed or minimized then this window will be closed/minimized too. _parent_ defines z-order of this new window. Window with the defined _parent_ will always float on top its parent.
 + `caption` : string - optional, window caption (or title).
 + `x` : integer - optional, screen pixels, horizontal position of the window on screen;
 + `y` : integer - optional, screen pixels, vertical position of the window from the top of the screen;
@@ -238,6 +238,14 @@ parameters:
 
   + `true` - coordinates are in physical device pixels; 
   + `false` - coordinates are in CSS pixels - 1/96 of inch;
+
+### cursorPos()
+
+```js
+const [x,y] = window.cursorPos();
+```
+
+Reports current position of cursor relative to client area of the window.
 
 ---
 
@@ -720,3 +728,32 @@ the user has clicked on tray icon.
 ### "spacechange"
 
 Space (a.k.a. virtual desktop) has changed. Use `Window.this.isOnActiveSpace` property to determine if window is on active space now. 
+
+### "system-suspend"
+
+The system is about to enter a suspended state (e.g., sleep mode).
+
+### "system-resume"
+
+The system has resumed operation after being suspended.
+
+### "system-lock"
+
+The desktop session has been locked.
+
+### "system-unlock"
+
+The desktop session has been unlocked.
+
+### "system-logon"
+
+A user logs on to a desktop session.
+
+### "system-logout"
+
+A user has logged off the session.
+
+### "system-shutdown"
+
+A user chooses to end the session.
+

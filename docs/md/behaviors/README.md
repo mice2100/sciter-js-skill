@@ -47,7 +47,7 @@ Here is a list of such built-in behaviors that are available out of the box in S
   * [number](behavior-number.md) 
   * [textarea](behavior-textarea.md) 
   * [plaintext](behavior-plaintext.md) - plaintext multiline editor
-  * [richtext](behavior-richtext.md) - WYSIWYG HTML editor
+  * [htmlarea](behavior-htmlarea.md) - WYSIWYG HTML editor
 * selects 
   * [select,select-multiple,select-checkmarks, tree, tree-checkmarks](behavior-select.md) 
   * [dropdown-select](behavior-select-dropdown.md) - dropdown select and editable dropdown select
@@ -56,7 +56,7 @@ Here is a list of such built-in behaviors that are available out of the box in S
   * [date](behavior-date.md) 
   * [time](behavior-time.md) 
 * containers 
-  * [selection](behavior-selection.md) - HTML range selection
+  * [selectable](behavior-selectable.md) - HTML range selection.
   * [form](behavior-form.md) 
   * [frame](behavior-frame.md) 
   * [frameset](behavior-frame-set.md) 

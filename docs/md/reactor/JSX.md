@@ -6,7 +6,7 @@ toc_max_heading_level: 5
 ---
 
 
-Note: this document is written intentionally close to [ReactJS/JSX introduction](https://reactjs.org/docs/introducing-jsx.html).
+Note: this document is written intentionally close to [ReactJS/JSX introduction](https://reactjs.org/docs/introducing-jsx.html).
 
 ## Introducing SciterJS::JSX
 
@@ -80,7 +80,7 @@ Note: you should either use quotes (for string values) or curly braces (for expr
 
 ## Specifying children with JSX
 
-If tag is empty then you may close it immediately with `/>` :
+If tag is empty then you may close it immediately with `/>` :
 
 ```js
 const velement = <img src={user.avatarUrl} />;
@@ -141,12 +141,37 @@ That above will generate
 
 ## Sciter's HTML parsing flavor support in JSX
 
-JSX follows HTML parsing shortcut rules used in SciterJS and so:
+JSX follows HTML parsing shortcut rules used in SciterJS:
 
-* `<input(firstName) />` is an equivalent of *name* attribute declaration: `<input name="firstName" />`
-* `<input|text />` is an equivalent of *type* attribute declaration: `<input type="text" />`
-* `<input.search />` is an equivalent of *class* attribute declaration: `<input class="search" />`
-* `<input#lookup />` is an equivalent of *id* attribute declaration: `<input id="lookup" />`
+### HTML attribute shortcuts:
+
+* `<input(firstName) />` is an equivalent of *name* attribute declaration: `<input name="firstName" />`
+* `<input|text />` is an equivalent of *type* attribute declaration: `<input type="text" />`
+* `<input.search />` is an equivalent of *class* attribute declaration: `<input class="search" />`
+* `<input#lookup />` is an equivalent of *id* attribute declaration: `<input id="lookup" />`
+
+### Runtime state shortcuts:
+
+By using special form of attribute declaration `:statename` it is possible to define runtime states of DOM elements:
+
+* `:checked` or `:checked={true|false}`, equivalent of `element.state.checked = true;`;
+* `:expanded` or `:expanded={true|false}`, ditto;
+* `:collapsed` or `:collapsed={true|false}`, ditto;
+* etc.
+
+Names of runtime styles are matching those of CSS like `button:checked {...}`  but there are two additional "virtual" states: 
+
+* `:value={...}` - equivalent of `element.value = ...`; 
+  
+  Example, this JSX will create selectable list with _Second_ option set as a value:
+  ```
+  <select|list :value={"b"}>
+    <option value="a">First</option>
+    <option value="b">Second</option>
+  </select>
+  ```
+
+* `:html={string}` - equivalent of `element.innerHTML = string`. This allows to insert HTML-as-a-text from a string to JSX. 
 
 ### Using compound component names in JSX
 
@@ -204,7 +229,7 @@ Some methods of Element class allow to populate DOM by the vnode definitions:
 container.content(<div>Hello wonderful world</div>);
 ```
 
-After that the container will have single child element: `<div>`
+After that the container will have single child element: `<div>`
 
 ```js
 var arr = [1,2,3];
@@ -255,7 +280,7 @@ References are commonly assigned to an instance property when a component is con
 ```js
 class MyForm extends Element {
 
-  nameInput = Reactor.createRef();
+  nameInput = null;
 
   render() {
     return <form>

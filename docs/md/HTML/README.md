@@ -13,7 +13,7 @@ Sciter's HTML parser, in general, follows HTML5 *language* syntax with extras:
 | ------ | ------------ |
 | `<input #id />`    | `<input id="id" />`
 | `<input .class />` | `<input class="class" />`
-| `<input \|text />` | `<input type="text" />`
+| `<input |text />` | `<input type="text" />`
 | `<input (name) />` | `<input name="name" />`
 
 Multiple shortcuts can be combined together. This declaration 
@@ -40,9 +40,9 @@ Those are Sciter specific elements, most of them have a custom [behavior](../beh
 | [`<menu .context>`](../behaviors/behavior-menu.md)  | [context-menu styled](../CSS/properties#context-menu) element
 | [`<menu .popup>`](../behaviors/behavior-menu.md)  | [context-menu styled](../CSS/properties#context-menu) element
 | [`<plaintext>`](../behaviors/behavior-plaintext.md) | Multiline text editor
-| [`<htmlarea>`](../behaviors/behavior-richtext.md) | WYSIWYG/richtext/html editor
+| [`<htmlarea>`](../behaviors/behavior-htmlarea.md) | WYSIWYG/htmlarea/html editor
 | [`<frameset>`](../behaviors/behavior-frame-set.md) | child elements to be resizable window blocks
-| [`<select|tree>`](../behaviors/behavior-select.md) | Tree-list select element, one of [behavior select](behaviors/README.md) types
+| [`<select\|tree>`](../behaviors/behavior-select.md) | Tree-list select element, one of [behavior select](behaviors/README.md) types
 | `<include src="some.html"/>` | Inserts HTML fragment file inplace.
 
 
@@ -51,7 +51,7 @@ Those are Sciter specific elements, most of them have a custom [behavior](../beh
 | Attribute  | Description |
 | ---------  | ----------- |
 | `spellcheck` | true/false enable or disable spellcheck
-| `selectable` | allow content selection (behavior)
+| `selectable` | allow content selection (applies behavior:html-selection)
 | `novalue`    | synonym of `placeholder`
 
 ## Misc

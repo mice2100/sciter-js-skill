@@ -15,7 +15,8 @@ toc_max_heading_level: 5
 * `event.defaultPrevented`
 * `event.eventPhase`
 * `event.target`
-* `event.type`
+* `event.type` - "click", "mousedown", etc.
+* `event.namespace` - namespace portion (after the dot) of event name. Like "comp" in "click.comp" event.
 * `event.data:any`
 * `event.details:any` - alias of `event.data`
 * `event.keyCode:integer` - key code, see include/sciter-x-key-codes.h
@@ -59,7 +60,7 @@ toc_max_heading_level: 5
 * `event.y` - to `event.currentTarget` - the element this event handler is attached to.
 * `event.source` - used in some events to indicate auxiliary `source` element. 
 * `event.isOnIcon:Element` - mouse events, it is set to element when mouse is on icon of that element. Element icon is an element's foreground-image (if any) so event.isOnIcon is on when mouse is over area where the image is rendered.
-* `event.reason` - 
+* `event.reason` - integer, event type specific flags.
 
 ### properties (Sciter specific, gestures):
 
@@ -83,6 +84,15 @@ toc_max_heading_level: 5
     if(Event.keyState(`CapsLock`))
       ... CAPS LOCK is on ...
   ```
+
+* `Event.cursorPos(): [x,y]` 
+
+  Reports current cursor position relative to desktop, example:
+
+  ```js
+  let [xpos,ypos] = Event.cursorPos();
+  ```
+
 
 ## Known Events
 
@@ -132,9 +142,9 @@ toc_max_heading_level: 5
 | **mediachange** | **media-change** | the event is sent to the window only when media variables have changed
 | **contentchange** | **content-change** | DOM change notification: elements added or removed, attrributes changed
 | **inputlangchange** | **input-lang-change** | user has switched input language
-| **pastehtml** | **paste-html** | is sent by [behavior:richtext](../behaviors/behavior-richtext) on paste of HTML from clipboard
-| **pastetext** | **paste-text** | is sent by [behavior:richtext](../behaviors/behavior-richtext) on paste of plain text from clipboard
-| **pasteimage** | **paste-image** | is sent by [behavior:richtext](../behaviors/behavior-richtext) on paste of image from clipboard
+| **pastehtml** | **paste-html** | is sent by [behavior:htmlarea](../behaviors/behavior-htmlarea) on paste of HTML from clipboard
+| **pastetext** | **paste-text** | is sent by [behavior:htmlarea](../behaviors/behavior-htmlarea) on paste of plain text from clipboard
+| **pasteimage** | **paste-image** | is sent by [behavior:htmlarea](../behaviors/behavior-htmlarea) on paste of image from clipboard
 | **popuprequest** | **popup-request** | see [popup life-cycle events](../DOM/out-of-canvas-elements#popuplifecycleevents)  
 | **popupready** | **popupready**  | see [popup life-cycle events](../DOM/out-of-canvas-elements#popuplifecycleevents)     
 | **popupdismissing** | **popup-dismissing** | see [popup life-cycle events](../DOM/out-of-canvas-elements#popuplifecycleevents)     

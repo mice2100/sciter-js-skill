@@ -20,8 +20,8 @@ Window specific attributes - defined on root `<html>` element loaded into the wi
 | `window-frame` | string, defines window type: "default","standard","solid","solid-with-shadow", "extended", "transparent" 
 | `window-icon`  | Window icon URL
 | `window-title` | Window title
-| `window-width` | initial width of the window, CSS length units
-| `window-height`| initial height of the window, CSS length units
+| `window-width` | initial width of the window, CSS length units or percent (of desktop width) 
+| `window-height`| initial height of the window, CSS length units or percent (of desktop height) 
 | `window-min-width` | minimal width of the window, CSS length units
 | `window-min-height`| minimal height of the window, CSS length units
 | `window-max-width` | maximal width of the window, CSS length units

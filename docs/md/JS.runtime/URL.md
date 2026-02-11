@@ -2,7 +2,7 @@
 
 The URL class provides a convenient interface for creating and parsing URLs.
 
-#### Properties:  
+## Properties:
 
 * `URL.hash` 
 * `URL.host`
@@ -15,13 +15,13 @@ The URL class provides a convenient interface for creating and parsing URLs.
 * `URL.protocol`
 * `URL.search`
 
-#### Properties (Sciter specific):
+## Properties (Sciter specific):
 
 * `URL.filename`
 * `URL.dir`
 * `URL.extension`
 
-#### Methods:
+## Methods:
 
 * `URL.guessMimeType()`
 * `URL.fromPath(path):string`

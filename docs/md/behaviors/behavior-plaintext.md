@@ -147,5 +147,5 @@ editor.plaintext.load("file://users/documents/readme.txt");
 
 * `plaintext.update(mutator:function(tctx) {}) : bool`
 
-  Performs transactional update, see [richtext.update](behavior-richtext.md#update);
+  Performs transactional update, see [htmlarea.update](behavior-htmlarea.md#update);
 

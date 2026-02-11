@@ -69,6 +69,15 @@ Returns location of well known folders on user machine, name is one of:
 
 If _relpath_ is provided the function returns absolute path of that relpath combined with the folder path.
 
+### `env.drives() : []`
+
+Returns list of paths - root paths of mounted drives. 
+
+```js
+const drives = env.drives();
+// drives: ["C:","D:"] on Windows
+```
+
 ### `env.pathURL(name): string`
  
 same as `env.path(name)` but returns "file://..." URL.

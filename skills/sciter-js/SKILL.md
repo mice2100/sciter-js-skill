@@ -1,1319 +1,939 @@
 ---
 name: sciter-js
-description: Sciter.js 5.0.3.11 desktop application development. Use for: Sciter.js, Sciter, SciterJS, scapp, usciter, sciter-js-sdk, Sciter UI, Sciter desktop apps, HTML/CSS/JS apps with scapp, Sciter C++ integration, Sciter components, Sciter Graphics, Reactor, JSX, flow layout, flex units, element painting, custom drawing. Features: richtext editor, @storage database, tray icon, FolderView, CSS grid, C++/JS bridging. Supports both pure JS development (with scapp) and C++ integration modes.
+description: Sciter.js 6.0.3.8 desktop application development. Comprehensive guide covering CSS, JSX/Reactor, Signals, DOM API, @sys/@env/@storage modules, Graphics, all built-in behaviors, scapp mode, C++ integration, i18n, and all Sciter-specific features. For: Sciter.js, Sciter, SciterJS, scapp, usciter, sciter-js-sdk, Sciter UI, Sciter desktop apps, HTML/CSS/JS apps with scapp, Sciter components, Sciter Graphics, Reactor, JSX, Signals, flow layout, flex units, element painting, @storage database, tray icon, FolderView, CSS grid. Supports both pure JS development (with scapp) and C++ integration modes.
 ---
 
 # Sciter.js Skill
 
-Professional Sciter.js desktop application development. Supports **two development modes**:
+Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTML/CSS/JS engine into native desktop applications. It is **NOT** a browser — many standard Web/Node.js APIs do NOT work.
 
-1. **scapp Mode** - Pure HTML/CSS/JS apps without C++ (faster prototyping, simpler deployment)
-2. **C++ Integration Mode** - Native backend with Sciter UI (full system access, custom behaviors)
+## CRITICAL: Prohibited Patterns
+
+> **Read this first.** Sciter's engine differs from browsers. Using the wrong APIs will produce silent failures or errors.
+
+### CSS — DO NOT USE these:
+
+| ❌ Web Standard | ✅ Sciter Equivalent |
+|----------------|---------------------|
+| `display: flex` | `flow: horizontal` / `flow: vertical` |
+| `display: grid` | `flow: grid(...)` |
+| `flex-grow`, `flex-shrink` | Flex units: `width: *`, `width: 0.5*` |
+| `@media (max-width: 600px)` | `@media width < 600px` (comparison operators, no parens) |
+| CSS `var(--name)` only | Sciter also supports `var(name):` declaration form |
+| `display: none` | `visibility: none` (Sciter equivalent) |
+| `rem`, `em` units (for font sizes) | Use `dip` for device-independent pixels |
+| CSS `calc()` with flex units | Flex units cannot be used inside calc |
+| Standard CSS pseudo-elements only | Sciter-specific pseudo-elements: `::marker`, `::shadow` (block-level) |
+
+### JavaScript — DO NOT USE these:
+
+| ❌ Web/Node.js | ✅ Sciter Equivalent |
+|---------------|---------------------|
+| `document.getElementById()` | `document.$("#id")` or `document.getElementById()` (both work) |
+| `require()` / CommonJS | `import` statements (ES modules only) |
+| `fs` (Node.js) | `import * as sys from "@sys"` → `sys.fs.*` |
+| `process.env` | `import * as env from "@env"` → `env.variable()` |
+| `React.useState()` | `this.componentUpdate()` or `Reactor.signal()` |
+| `React.useRef()` | JSX `var` attribute: `<div var={this.myRef}>` |
+| `ReactDOM.render()` | `element.patch(<App/>)` or `element.content(<App/>)` |
+| `<img>`, `<br>`, `<input>` (self-closing) | Must explicitly close: `<img />`, `<br />`, `<input />` |
+| `Node.js streams` | Sciter uses libuv-based @sys module |
+| Web standard fetch API | Use Sciter's fetch (has `sync` option) |
+
+### HTML — Sciter Differences:
+
+| Feature | Sciter Syntax |
+|---------|--------------|
+| **Type shortcut** | `<input\|text>` = `<input type="text">` |
+| **Name shortcut** | `<input(firstName)>` = `<input name="firstName">` |
+| **Class shortcut** | `<div.myclass>` = `<div class="myclass">` |
+| **ID shortcut** | `<div#myid>` = `<div id="myid">` |
+| **Multiple shortcuts** | `<button|radio(group).first> = `<button type="radio" name="group" class="first">` |
+| **Space after element** | Space is optional after element name (not before `=`), unlike HTML |
+| **Custom tags allowed** | `<toolbar>`, `<user-card>`, etc. with custom `style="display:block"` |
+| **Attribute events** | Not supported in static HTML; use JSX instead: `<button onclick={...}>` |
+| **`&platform-cmd;`** | Replaced with `Ctrl/CMD...` in strings |
+
+---
 
 ## Development Modes
 
-### scapp Mode (Pure JS - No C++ Required)
+### scapp Mode (Pure JS — No C++ Required)
 
-Use scapp as the application host. Ideal for:
-- Rapid prototyping
-- Web developers transitioning to desktop
-- Apps that don't need native system access
-- Cross-platform deployment without recompilation
+Use scapp as the application host for pure JavaScript development:
 
-**Running with scapp:**
 ```bash
-# Run directly
-scapp main.htm
-
-# With debug mode
-scapp main.htm --debug
-
-# Package as standalone
-scapp -p myapp main.htm
+scapp main.htm          # Run directly
+scapp main.htm --debug  # With inspector
+scapp                   # Auto-finds: run.js → scapp.htm → main.htm → index.htm
 ```
 
-**Project structure (scapp mode):**
 ```
 myapp/
 ├── main.htm           # Entry point
-├── css/
-│   └── styles.css     # Sciter CSS (flow, flex units)
-├── js/
-│   └── app.js         # Application logic
+├── css/styles.css     # Sciter CSS
+├── js/app.js          # Application logic
 └── resources/         # Images, assets
 ```
 
+**No build step required** — just save files and run.
+
 ### C++ Integration Mode
 
-Use when you need:
-- Native system access
-- Custom C++ behaviors
-- Performance-critical operations
-- Integration with existing C++ codebase
+For native system access and custom behaviors. See **cpp-integration.md** for full C++ reference including:
+- SOM_PASSPORT macro for C++ interface
+- Window class methods: `Window.this.assetInterface.methodName(args)`
+- Custom behaviors with `prototype` CSS property
+- uimain() and native event handling
 
-**Requires:** C++17, CMake, Sciter SDK
+---
 
-**Choose mode based on user request:**
-- User says "create a Sciter app" → Ask: "Do you need C++ native features or just HTML/CSS/JS?"
-- User says "scapp app" or "pure JS" → Use scapp mode
-- User says "C++ integration" or "native backend" → Use C++ mode
+## CSS System
 
-## Quick Start
+Sciter's CSS extends standard CSS with desktop-specific features for UI development.
 
-### scapp Mode (Pure JS)
+### Flow Layout (Primary Layout System)
 
-When user requests scapp-based app:
-1. Create HTML entry point (`main.htm`)
-2. Add Sciter CSS with `flow` layout
-3. Add JavaScript with Reactor/JSX components
-4. Test with `scapp main.htm --debug`
-5. Package with `scapp -p myapp main.htm`
+Sciter uses `flow` instead of `display: flex/grid`:
 
-### C++ Mode
+```css
+/* Single row / column */
+.row  { flow: horizontal; }
+.col  { flow: vertical; }
 
-When user requests C++ integration:
-1. Generate project structure from `assets/template/`
-2. Customize CMakeLists.txt with project name
-3. Update mainWnd.h with app-specific asset interface
-4. Create UI files in `ui/` directory
+/* Wrapping */
+.wrap-h { flow: horizontal-wrap; }
+.wrap-v { flow: vertical-wrap; }
 
-## Architecture Pattern
+/* Stacked */
+.stack { flow: stack; }
 
-### C++ Entry Point (uimain)
-
-Always use `uimain()` as entry point - never `main()` or `WinMain()`:
-
-```cpp
-int uimain(std::function<int()> run) {
-    // 1. Configure script runtime options
-    UINT script_options = ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_SYSINFO;
-    SciterSetOption(nullptr, SCITER_SET_SCRIPT_RUNTIME_FEATURES, script_options);
-
-    // 2. Load resources (archive or local file)
-    sciter::string appBaseUrl;
-#ifdef LOCAL_MODE
-    appBaseUrl = Path2Url(GetAppPath() + L"/ui/main.htm");
-#else
-    sciter::archive::instance().open(aux::elements_of(resources));
-    appBaseUrl = WSTR("this://app/main.htm");
-#endif
-
-    // 3. Create window and set as global asset
-    sciter::om::hasset<mainWnd> pMainWnd = new mainWnd();
-    SciterSetGlobalAsset(pMainWnd);
-
-    // 4. Load UI
-    pMainWnd->load(appBaseUrl.c_str());
-
-    return run();
+/* Grid — ASCII art layout */
+.grid {
+  flow: grid(
+    1 1 1,
+    2 5 3,
+    4 4 4 4
+  );
 }
-```
 
-### Window Class Pattern
+/* Named rows */
+.form { flow: row(label, input select); }
 
-All window classes must:
+/* Flex Units — Fill Free Space
 
-1. Extend `sciter::window`
-2. Use constructor with window flags: `SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN | SW_ENABLE_DEBUG`
-3. Define asset interface via `SOM_PASSPORT`
+Flex units distribute **available space** proportionally:
 
-```cpp
-class mainWnd : public sciter::window {
-public:
-    mainWnd() : window(SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN | SW_ENABLE_DEBUG) {}
-
-    // Native functions exposed to JS
-    std::string stringSum(const std::string a, const std::string b) { return a + "+" + b; }
-
-    // Virtual properties
-    int get_windowHandle() { return (int)(intptr_t)get_hwnd(); }
-
-    // Asset interface - call as Window.this.assetInterface.functionName()
-    SOM_PASSPORT_BEGIN_EX(assetInterface, mainWnd)
-        SOM_FUNCS(SOM_FUNC(stringSum))
-        SOM_PROPS(SOM_RO_VIRTUAL_PROP(windowHandle, get_windowHandle))
-    SOM_PASSPORT_END
-
-    // Alternative: named call handler
-    BEGIN_FUNCTION_MAP
-    FUNCTION_1("xcallTest", xcallTest);
-    END_FUNCTION_MAP
-
-    sciter::value xcallTest(sciter::value data) {
-        return data.get<int>() * 2;
-    }
-};
-```
-
-## CSS Constraints (Sciter vs Web)
-
-### PROHIBITED - Use Sciter Equivalents Instead
-
-| Web Standard | Sciter Equivalent |
-|--------------|-------------------|
-| `display: flex` | `flow: horizontal`, `flow: vertical`, etc. |
-| `display: grid` | `flow: grid(...)` |
-| `flex-grow`, `flex-shrink` | Flex units: `width: *`, `width: 0.5*` |
-
-### Required Sciter CSS Properties
-
-**Flow Layout System:**
 ```css
-/* Single row */
-container { flow: horizontal; }
-
-/* Single column */
-container { flow: vertical; }
-
-/* Multiple rows */
-container { flow: horizontal-wrap; }
-
-/* Multiple columns */
-container { flow: vertical-wrap; }
-
-/* Stacked elements */
-container { flow: stack; }
-
-/* Grid layout */
-container { flow: grid(1 1 1, 2 5 3, 4 4 4); }
-
-/* Automatic rows */
-container { flow: row(label, input select); }
-```
-
-**Flex Units:**
-```css
-/* Fill available space */
-child { width: *; }
-child { size: *; } /* width and height */
-
-/* Ratio-based */
-child { width: 0.7*; }  /* 70% of free space */
+child { width: *; }       /* fill remaining space */
+child { width: 0.7*; }     /* 70% of free space */
+child { width: 2*; }        /* 2x weight */
 child { margin: 0.3* 0.7*; } /* flexible margins */
-child { border-spacing: *; } /* equal spacing */
+.parent  { border-spacing: *; }  /* equal spacing between children */
 ```
 
-### Sciter-Specific Features
+**Important**: Flex units (`*`) cannot be used inside `calc()`.
 
-**Style Sets:**
+### CSS Units
+
+| Unit | Description | Usage |
+|------|-----------|------|
+| **px** | Physical pixels (1:1 on 96dpi), same as `ppx` | `width: 100px` |
+| **dip** | Device-independent pixels (1/96") - **PRIMARY UNIT** | `width: 8dip` |
+| **ppx** | Physical pixels - always 1:1 | `width: 10ppx` |
+| **in/cm** | Inches | `width: 2.54in` |
+| **%** | Percentage of parent | `width: 50%` |
+| **em/rem** | Font relative | `font-size: 1.2em` |
+| **vw/vh** | Viewport units | `width: 50vw` |
+| *** | Flex unit (equals `1*`) | `size: *` = width & height |
+
+**Width/Height units** (for responsive sizing):
+
 ```css
-@set name {
-    .button { background: blue; }
-    .button:hover { background: darkblue; }
+/* Width based on parent */
+child { width: width(X%); height: height(Y%); }
+
+/* OR percentage of parent's content-box */
+child { width: width(content-box); height: height(content-box); }
+```
+
+### CSS @-Rules
+
+#### `@media` — Media Queries (Sciter syntax)
+
+```css
+/* Comparison operators, no parentheses */
+@media width < 600px { body { font-size: 12pt; } }
+@media platform == "Windows" { body { font: system; } }
+
+/* Built-in variables */
+@media high-contrast { .card { background: white; color: black; } }
+
+/* Custom variables (set via JS) */
+@media viewport == "narrow" { div:nth-child(1n) { clear: after; } }
+```
+
+#### `@const` — Named Constants
+
+```css
+@const BRAND_COLOR: #3498db;
+@const SPACING: 8dip;
+
+button { background: @BRAND_COLOR; padding: @SPACING; }
+```
+
+#### `@mixin` — Reusable Style Blocks
+
+```css
+@mixin rounded(radius) {
+  border-radius: $radius;
+  overflow: hidden;
+}
+
+.card { @rounded(8dip); background: white; }
+```
+
+#### `@if` / `@else` — Compile-time Conditionals
+
+```css
+/* Like C preprocessor */
+@if platform == "Windows" {
+  body { font: system; }
+} @else {
+  body { font: 12pt "Helvetica Neue"; }
 }
 ```
 
-**Behaviors (Class Controllers):**
+#### `@image-map` — CSS Sprites
+
 ```css
-user-card {
-    prototype: UserCard url(users-ui.js);
+@image-map toolbar-icons {
+  src: url(toolbar.png);
+  cells: 4 2;
+  items: save, open, cut, copy, paste, undo, redo;
 }
+
+.save-btn { background-image: image-map(toolbar-icons, save); }
 ```
 
-**Aspects (Functional Controllers):**
+Usage:
 ```css
-*[onclick] {
-    aspect: OnClickAspect url(ui-helpers.js);
+.button.bold { background-image: image-map(toolbar-icons, bold); }
+```
+
+#### `@set` — Style Sets (Scoped Styles)
+
+Named style sets for component scoping:
+
+```css
+@set card-styles {
+  :root { flow: vertical; padding: 8dip; }
+  .title { font-weight: bold; }
 }
+
+.card { style-set: card-styles; }
 ```
 
-## C++ to JS Communication
+Apply via CSS: `.card { style-set: card-styles; }`
+Apply via JS/JSX: `CSS.set()` function.
 
-### SOM_PASSPORT Pattern (Recommended)
+### Sciter-Specific CSS Properties
 
-Expose methods via `SOM_PASSPORT` - call from JS as `Window.this.assetInterface.methodName()`:
+| Property | Purpose | Example |
+|----------|---------|------|
+| `size` | Width/height shorthand | `size: 100dip 50dip` or `size: *` |
+| `border-shape` | Custom border shape | `border-shape: path(M 0 0 L10 10 Z)` |
+| `foreground-*` | Foreground image layer | `foreground: url(icon.svg)` |
+| `hit-margin` | Extend interactive area | `hit-margin: 4dip` |
+| `popup-position` | Default popup anchor | `popup-position: 7 1` (NUMPAD) |
+| `popup-animation` | Popup appearance effect | `popup-animation: blend 200ms` |
+| `context-menu` | Assign context menu | `context-menu: url(menu.htm)` |
+| `role` | ARIA-like role | `role: toolbar` |
+| `content-isolate` | Prevent style leakage | `content-isolate: isolate` |
+| `mapping` | RTL/bidirectional support | `mapping: rtl` |
+| `layer` | Force bitmap buffer | `layer: force` |
+| `clip-box` | Clip element to box | `clip-box: padding-box` |
 
-```cpp
-SOM_PASSPORT_BEGIN_EX(assetInterface, mainWnd)
-    SOM_FUNCS(
-        SOM_FUNC(method1)
-        SOM_FUNC(method2)
-    )
-    SOM_PROPS(
-        SOM_RO_VIRTUAL_PROP(propName, get_propName)
-    )
-SOM_PASSPORT_END
+### State Selectors (CSS ↔ JS ↔ JSX)
+
+Sciter state pseudo-classes with JS/JSX counterparts:
+
+| CSS Selector | JS Access | JSX State | Notes |
+|-------------|-----------|-------|
+| `:active` | `el.state.active` | `state-active` | Mouse pressed |
+| `:hover` | `el.state.hover` | - | Mouse over (read-only) |
+| `:focus` | `el.state.focus` | - | Has focus |
+| `:checked` | `el.state.checked` | `:checked={true}` | Toggle state |
+| `:disabled` | `el.state.disabled` | `state-disabled` | Grayed out |
+| `:readonly` | `el.state.readonly` | `state-readonly` | Read-only |
+| `:expanded` | `el.state.expanded` | `:expanded={true}` | Expanded state |
+| `:collapsed` | `el.state.collapsed` | - | Opposite of :expanded |
+| `:invalid` | `el.state.invalid` | `state-invalid` | Validation failed |
+| `:empty` | `el.state.empty` | - | No content |
+| `:busy` | `el.state.busy` | `state-busy` | Loading |
+| `:current` | `el.state.current` | - | Current item in list |
+| `:selected` | `el.state.selected` | - | Selected item |
+| `:tab-focus` | `el.state.tabfocus` | Tab focus |
+| `:owns-focus` | `el.state.ownsfocus` | Has focused child |
+
+Additional read-only states: `:visible`, `:flow`, `:occluded`, `:popup`, `:owns-popup`, `:drag-over`, `:drag-source`, `:ltr`, `:rtl`, `:window-root`, `:blur-behind`, `:animating`.
+
+### Vector Images — `path()` and `icon()`
+
+Inline SVG paths in CSS for lightweight icons:
+
+```css
+/* Inline path */
+.icon-arrow { background: path(M 10 5 L10 5 Z) 0 0 10 10; }
+
+/* Icon function */
+.expand { background-image: icon(right); }
+
+/* Stock icons */
+.close { background-image: icon(close); }
 ```
 
-### BEGIN_FUNCTION_MAP Pattern
+---
 
-For named calls via `Window.this.xcall("name", args...)`:
+## JSX & Reactor
 
-```cpp
-BEGIN_FUNCTION_MAP
-    FUNCTION_1("functionName", cppFunction)
-END_FUNCTION_MAP
+**Native JSX** — Sciter has built-in JSX support without build step. No Babel, no Webpack.
+
+### JSX Syntax
+
+```jsx
+// Basic element with attributes
+const el = <h1 id="hw">Hello, world!</h1>;
+
+// Shorthand attributes
+<input|text />           /* type="text" */
+<input(name) />            /* name="name" */
+<input.search />           /* class="search" */
+<input#lookup />          /* id="lookup" */
+
+// Combined shortcuts
+<button|radio(group).first>    /* type="radio" name="group" class="first" */
+
+// Self-closing required
+<img src="photo.png" />    /* ❌ WRONG */
+<img src="photo.png" />       /* ✅ CORRECT */
 ```
 
-### Value Conversion
+### Reactor Signals (Reactive State)
 
-**Primitives:**
-```cpp
-sciter::value val_int(42);
-sciter::value val_str(L"Hello");
-sciter::value val_bool(true);
-```
+Signals are observable values for automatic re-rendering:
 
-**Objects:**
-```cpp
-sciter::value obj;
-obj.set_item("key", value);
-```
-
-**Arrays:**
-```cpp
-std::vector<sciter::value> vec;
-sciter::value arr = sciter::value::from_list(vec);
-```
-
-## Global Window Methods
-
-**Tray Icon (System Tray):**
 ```js
-// Set tray icon
-Window.this.trayIcon({
-    image: await Graphics.Image.load("icon.svg"),
-    text: "Tooltip text"
+const { signal, computed, effect } = Reactor;
+
+// Create signal
+const count = signal(0);
+count.value += 1;              // triggers subscribers
+
+// Computed signal
+const doubled = computed(() => count.value * 2);
+
+// Effect (side-effect)
+effect(() => console.log(`Count: ${count.value}`));
+```
+
+### Class Components
+
+```js
+class MyComponent extends Element {
+  name = "World";
+
+  // Called on creation AND on parent re-render
+  this(props) {
+    this.name = props.name || "World";
+  }
+
+  // Required - returns JSX
+  render(props, kids) {
+    return <h1>Hello, {this.name}</h1>;
+  }
+
+  // Lifecycle
+  componentDidMount() { /* setup */ }
+  componentWillUnmount() { /* cleanup */ }
+
+  // State updates
+  handleClick() {
+    this.componentUpdate({count: this.count + 1});
+  }
+
+  // Event handlers (event name syntax)
+  ["on click"]() {
+    console.log("clicked!");
+  }
+}
+```
+
+### Component Lifecycle Order
+
+**Mounting**: `constructor()` → `this(props,kids)` → `render(props,kids)` → `componentDidMount()`
+
+**Update by parent**: `this(props,kids)` → `render(props,kids)`
+
+**Update by self**: `componentUpdate({...})` → `render()` → `componentDidUpdate()`
+
+**Unmounting**: `componentWillUnmount()` → `componentWillUnmount()`
+
+---
+
+## DOM API
+
+### Element Queries (Sciter shortcuts)
+
+```js
+element.$("selector");           // first match (querySelector)
+element.$$("selector");          // all matches (querySelectorAll)
+element.$p("selector");            // closest ancestor (closest)
+element.$o("selector");            // owner (for popups)
+element.$is("selector");           // test match (matches)
+```
+
+### Element Properties
+
+```js
+el.tag;                  // "div", "span"
+el.elementIndex;          // index among siblings
+el.value;                 // behavior-specific value
+el.checked;               // maps to :checked
+el.state;                // state object (see State Selectors table)
+```
+
+### Element.State (Runtime State Flags)
+
+```js
+// Set states (triggers CSS)
+el.state.expanded = true;     // → :expanded { ... }
+el.state.disabled = true;      // → :disabled { ... }
+
+// Read-only states
+el.state.hover;              // mouse over?
+el.state.visible;            // is visible?
+el.state.focus;              // has focus?
+
+// State methods
+el.state.capture(true);       // capture mouse
+el.state.pixelsIn("1.2em"); // convert CSS units to pixels
+```
+
+### Element Events (jQuery-style)
+
+```js
+// Subscribe
+el.on("click", handler);
+el.on("click", "button.close", handler);  // delegated
+
+// Unsubscribe
+el.off("click");
+el.off(".my-ns");
+
+// Once
+el.once("click", handler);
+
+// Global events (cross-window)
+el.onGlobalEvent("app-update", handler);
+element.onGlobalEvent("custom-event", handler);
+```
+
+### Element — Popups & Airborne
+
+```js
+// Show popup
+el.popup(<menu>...</menu>, {
+  anchorAt: 7,     // NUMPAD position (7=bottom-left of anchor)
+  popupAt: 1,      // NUMPAD position on popup (1=top-left)
+  animationType: "blend"
 });
 
-// Update tooltip
-Window.this.trayIcon({ text: "Updated" });
+// Make element float
+el.takeOff({
+  x: 100, y: 100,
+  relativeTo: "screen",
+  window: "detached"  // "attached"|"detached"|"popup"
+});
 
-// Remove icon
+// Land back
+el.takeOff();
+```
+
+### Element — Timers
+
+```js
+// Throttle-friendly timer (replaces existing)
+el.timer(200, function() {
+  // this = element
+  return true;  // repeat (interval)
+});
+
+// Deferred execution
+el.post(function() {
+  // this = element
+});
+```
+
+### Element — Custom Painting
+
+```js
+class PaintedElement extends Element {
+  paintBackground(gfx) {
+    // draw behind content
+  }
+
+  paintContent(gfx) {
+    // main custom drawing
+  }
+
+  paintForeground(gfx) {
+    // draw on top of content
+  }
+}
+```
+
+### Element.box() — Geometry
+
+```js
+element.box("inner", "self", "document", "window");
+```
+
+---
+
+## Window API
+
+### Creating Windows
+
+```js
+const win = new Window({
+  type: Window.FRAME_WINDOW,
+  url: "page.htm",
+  caption: "My Window",
+  width: 800, height: 600
+  alignment: 5,  // NUMPAD: center on screen
+  parameters: { data: "passed to window" }
+});
+```
+
+### Window Properties
+
+```js
+Window.this.state;           // WINDOW_SHOWN, WINDOW_HIDDEN, etc.
+Window.this.frameType;        // "standard", "solid", "solid-with-shadow", "extended", "transparent"
+Window.this.caption;         // title bar text
+Window.this.minSize = [w,h]; // min size
+Window.this.maxSize = [w,h]; // max size
+Window.this.focus;           // element with focus
+```
+
+### Window Methods
+
+```js
+// File dialogs
+const path = Window.this.selectFile({
+  mode: "open",
+  filter: "HTML Files (*.htm)|*.html|All Files (*.*)|*.*"
+});
+const folder = Window.this.selectFolder({ caption: "Select folder" });
+
+// Modal dialog
+const result = Window.this.modal(<dialog>...</dialog>);
+const result = Window.this.modal({ url: "dialog.htm", parameters: data });
+
+// Media variables
+Window.this.mediaVar("myvar");           // get/set
+Window.this.mediaVars({ myvar: "value" });  // set multiple
+
+// Hotkeys (Windows only)
+Window.this.addHotKeyHandler("F5", () => console.log("F5 pressed"));
+Window.this.removeHotKeyHandler(id);
+
+// Tray icon
+const img = await Graphics.Image.load("icon.svg");
+Window.this.trayIcon({ image: img, text: "Tooltip" });
 Window.this.trayIcon("remove");
-
-// Get icon position
-const [x, y, w, h] = Window.this.trayIcon("place");
 ```
 
-**Tray Icon Events:**
-```js
-Window.this.on("trayiconclick", (evt) => {
-    // Single click on tray icon
-    const { screenX, screenY, buttons } = evt.data;
-});
+---
 
-Window.this.on("trayicondoubleclick", (evt) => {
-    // Double click on tray icon
-});
-```
+## Event System
 
-## JS to C++ Communication
+### Event Categories
 
-### Calling Native Functions
+| Category | Events |
+|----------|--------|
+| **Mouse** | `click`, `dblclick`, `mousedown`, `mouseup`, `mousemove`, `mouseenter`, `mouseleave`, `wheel` |
+| **Keyboard** | `keydown`, `keyup`, `keypress` |
+| **Focus** | `focus`, `focusin`, `focusout`, `blur` |
+| **Scroll** | `scroll`, `scrollanimationstart`, `scrollanimationend` |
+| **Gestures** | `gesture-start`, `gesture-end`, `pan`, `pinch`, `rotation` |
+| **Document** | `parsed`, `ready`, `complete`, `close`, `beforeunload`, `unload` |
+| **Drag-n-Drop** | `drag`, `dragenter`, `dragleave`, `drop` |
 
-```javascript
-// SOM_PASSPORT exposed
-let result = Window.this.assetInterface.stringSum("a", "b");
-
-// BEGIN_FUNCTION_MAP
-let result = Window.this.xcall("xcallTest", 42);
-
-// Access virtual properties
-let handle = Window.this.assetInterface.windowHandle;
-```
-
-### Global Events
-
-```javascript
-// Send event (synchronous)
-Window.send("app-event", data);
-
-// Post event (asynchronous)
-Window.post("app-event", data);
-```
-
-### C++ Event Handlers
-
-```cpp
-// Override in window class
-virtual bool on_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
-    if (params.cmd == SUBMIT) {
-        // Handle form submission
-    }
-    return false;
-}
-```
-
-## Built-in Behaviors Overview
-
-Sciter provides built-in behaviors for common UI components. See `assets/behaviors-reference.md` for complete documentation of all behaviors.
-
-### Key Behaviors
-
-| Element | Behavior | Description |
-|---------|----------|-------------|
-| `<htmlarea>` | `behavior:richtext` | Rich text editor (NEW in 5.0) |
-| `<frame>` | `behavior:frame` | Document container |
-| `<input type="text">` | `behavior:edit` | Text editing |
-| `<select>` | `behavior:select` | Dropdown |
-| `<widget virtual-list>` | `behavior:virtual-list` | Virtual list |
-| `<button>` | `behavior:button` | Button |
-
-### Window Methods and Events
-
-**Tray Icon (System Tray):**
-```js
-// Set tray icon
-Window.this.trayIcon({
-    image: await Graphics.Image.load("icon.svg"),
-    text: "My App - " + new Date()
-});
-
-// Update
-Window.this.trayIcon({ text: "Updated text" });
-
-// Remove
-Window.this.trayIcon("remove");
-
-// Get position
-const [x, y, w, h] = Window.this.trayIcon("place");
-
-// Events
-Window.this.on("trayiconclick", (evt) => {
-    const { screenX, screenY, buttons } = evt.data;
-    // Show popup menu
-    new Window({
-        type: Window.POPUP_WINDOW,
-        url: "tray-popup.htm",
-        x: screenX,
-        y: screenY
-    });
-});
-
-Window.this.on("trayicondoubleclick", (evt) => {
-    Window.this.state = Window.WINDOW_SHOWN;
-});
-```
-
-## File System Components
-
-### FolderView Component
-
-Built-in file browser component for navigating directories:
+### Event Properties
 
 ```js
-import * as FolderView from "@sys/fs/folder-view.js";
-
-// Usage in HTML:
-// <folder-view path="/path/to/folder" />
+evt.type;              // "click", "mousedown", etc.
+evt.target;            // source element
+evt.clientX, evt.clientY; // viewport relative
+evt.screenX, evt.screenY;     // screen coordinates
+evt.keyCode;            // keyboard key code
+evt.ctrlKey, evt.shiftKey, evt.altKey, evt.metaKey;
 ```
 
-**Features:**
-- Directory navigation with path breadcrumbs
-- File filtering
-- Keyboard navigation (Enter, Escape, Arrow keys)
-- Events: `folder-change`, `file-activate`
+---
 
-## Storage Module (`@storage`)
+## JS Runtime Modules
 
-Persistent key-value storage with indexing for local data persistence:
+### Module `@sciter` (Sciter-specific)
 
 ```js
-import * as Storage from "@storage";
-import * as env from "@env";
+import * as sciter from "@sciter";
 
-// Open database
-const storage = Storage.open(env.path("documents") + "/app.db");
+// DOM queries (document-level)
+sciter.$("selector");
+sciter.$$("selector");
 
-// Initialize with indexes
-function initDb(storage) {
-    storage.root = {
-        usersByName: storage.createIndex("string", true),  // unique
-        logsByDate: storage.createIndex("date", false)     // non-unique
-    };
-    return storage.root;
-}
-
-var root = storage.root || initDb(storage);
-
-// Use indexes
-root.usersByName.set("John", { name: "John", age: 30 });
-const user = root.usersByName.get("John");
-
-// Register classes for prototype restoration
-storage.registerClass(User);
-storage.commit();
-```
-
-## CSS Enhancements (Version 5.0)
-
-### Grid Layout
-
-```css
-.container {
-    flow: grid(
-        1 1 1,
-        2 5 3,
-        4 4 4
-    );
-    /* 3x3 template, cells span multiple grid cells */
-}
-```
-
-### Flex Units Update
-
-Flex units now work seamlessly with all layout modes:
-
-```css
-.child {
-    width: *;        /* Fill remaining space */
-    width: 0.7*;     /* 70% of free space */
-    size: *;         /* Both width and height */
-}
-```
-
-## Asset References
-
-- **CSS Reference**: See `assets/css-reference.md` for complete Sciter CSS syntax
-- **Behaviors**: See `assets/behaviors-reference.md` for all built-in behaviors (richtext, frame, edit, select, etc.)
-- **SOM Patterns**: See `assets/som-patterns.md` for advanced SOM_PASSPORT usage
-- **Project Template**: See `assets/template/` for complete scaffolding template
-- **Runtime API**: See `assets/runtime-api-reference.md` for `@sciter`, `@sys`, `@env`, `@debug`, `@storage` modules
-- **Graphics API**: See `assets/graphics-api-reference.md` for Graphics, Color, Path, Image, Brush
-- **Component & Painting**: See `assets/component-painting-reference.md` for Element extension and custom painting
-- **Reactor/JSX**: See `assets/reactor-component-reference.md` for Reactor components and JSX
-
-## Sciter JS Runtime Modules
-
-Sciter provides special modules NOT available in standard JS or Node.js:
-
-### Module `@sciter`
-
-Core Sciter functions - import as `import * as sciter from "@sciter"`:
-
-```js
-// Event handling (jQuery-style)
-sciter.on("click", "button", handler);
+// Event handling
+sciter.on("click", handler);
 sciter.off("click");
 sciter.once("click", handler);
 
-// Global events (cross-window)
-sciter.onGlobalEvent("custom-event", handler);
+// Global events
+sciter.onGlobalEvent("app-event", handler);
 
-// DOM queries
-sciter.$("selector");   // First match
-sciter.$$("selector");  // All matches
+// Synchronous import
+const mod = sciter.import("module.js");
 
-// Synchronous module import
-const module = sciter.import("module.js");
+// Module URL resolver (NPM-style)
+sciter.setModuleUrlResolver((name, docDir, srcDir) => {
+  return `${docDir}node_modules/${name}/index.js`;
+});
 
 // Value parsing (JSON++)
-const val = sciter.parseValue("12px");  // Length object
+sciter.parseValue("12px");       // Length
+sciter.parseValue("0xFF");         // Integer (hex)
+sciter.parseValue("0d2021-12-01"); // Date
 
-// Encoding/Hashing
-sciter.encode(text, "utf-8");
-sciter.decode(bytes, "utf-8");
+// Encoding
+sciter.encode(text, "utf-8");    // string → ArrayBuffer
+sciter.decode(bytes, "utf-8");   // ArrayBuffer → string
+
+// Compression
+sciter.compress(buffer, "gzip");
+sciter.decompress(buffer, "gzip");
+
+// Base64
 sciter.toBase64(buffer);
-sciter.md5(buffer);
+sciter.fromBase64(string);
 
-// Utilities
-sciter.uuid();  // Generate UUID
-sciter.devicePixels(100);  // CSS to device pixels
+// Hashing
+sciter.md5(buffer);
+sciter.crc32(buffer);
+
+// Device pixels
+sciter.devicePixels(100);  // CSS px → device px
+
+// UUID
+sciter.uuid();
+
+// Load library
+sciter.loadLibrary("name");
 ```
 
-### Module `@sys`
+### Module `@sys` (Node.js-style I/O)
 
-Node.js-style runtime functions built on libuv:
+All async functions return Promises. File system, network, sockets, pipes, processes:
 
 ```js
 import * as sys from "@sys";
 
-// File operations
-await sys.fs.readFile("path.txt");     // -> ArrayBuffer
-await sys.fs.writeFile("path", data);
+// File operations (async)
+const data = await sys.fs.readFile("path.txt");   // → ArrayBuffer
+await sys.fs.unlink("path.txt");
+await sys.fs.rename("old", "new");
 await sys.fs.copyfile("src", "dst");
-await sys.fs.readdir("folder");        // -> [{name,type}]
-await sys.fs.stat("path");             // File info
+const entries = await sys.fs.readdir("folder");    // → [{name, type}]
+const stat = await sys.fs.stat("path");          // {st_size, st_mtime, ...}
 
-// File watching
-const watch = sys.fs.watch("path", (path, events) => { });
+// File operations (SYNC versions - use sys.fs.sync.* or *Sync)
+const data = sys.fs.sync.readFile("path.txt");    // or sys.fs.readFileSync()
+sys.fs.sync.unlink("path.txt");                // or sys.fs.unlinkSync()
+sys.fs.sync.rename("old", "new");             // or sys.fs.renameSync()
+sys.fs.sync.copyfile("src", "dst");           // or sys.fs.copyfileSync()
+const entries = sys.fs.sync.readdir("folder");   // or sys.fs.readdirSync()
+const stat = sys.fs.sync.stat("path");         // or sys.fs.statSync()
+sys.fs.sync.mkdir("path");                    // or sys.fs.mkdirSync()
+sys.fs.sync.rmdir("path");                    // or sys.fs.rmdirSync()
+sys.fs.sync.chmod("path", mode);             // or sys.fs.chmodSync()
+
+// File handles (for random access)
+const file = await sys.fs.open("path.txt", "r");
+const bytes = await file.read();
+await file.write(data);
+await file.close();
+
+// File handles (SYNC versions)
+const file = sys.fs.sync.open("path.txt", "r");  // or fs.openSync()
+const bytes = file.readSync();                     // read data
+file.writeSync(data);                             // write data
+file.closeSync();                                // close file
+
+// Watching files
+const watch = sys.fs.watch("path", (path, events) => {
+  // events: 0x01 = rename, 0x02 = change
+});
 watch.close();
 
-// TCP socket
+// Path utilities
+sys.fs.splitpath("/foo/bar.txt");  // → ["/foo", "bar.txt"]
+
+// Sockets (TCP/UDP)
 const socket = new sys.Socket(sys.AF_INET, sys.SOCK_STREAM);
-await socket.connect({ ip: "127.0.0.1", port: 8080 });
+await socket.connect({ip: "127.0.0.1", port: 8080});
 await socket.write(data);
 const data = await socket.read();
+socket.close();
 
-// Environment
-sys.cwd();           // Current directory
-sys.homedir();       // User home
-sys.getenv("PATH");  // Environment variable
+// Spawn processes
+const proc = sys.spawn("command", ["arg1", "arg2"]);
+proc.stdin, proc.stdout, proc.stderr;  // pipes
+proc.kill();
+
+// System info
+sys.cwd();           // current directory
+sys.homedir();       // user home
+sys.tmpdir();        // temp directory
+sys.exepath();        // executable path
 sys.uname();         // OS info
+sys.environ();       // all env vars
+sys.getenv("PATH");   // single var
 ```
 
-### Module `@env`
-
-OS and environment information:
+### Module `@env` (Environment Variables)
 
 ```js
 import * as env from "@env";
 
 // Constants
-env.PLATFORM;  // "Windows", "OSX", "Linux", "Android"
-env.DEVICE;    // "desktop" or "mobile"
+env.OS;          // "Windows-10", "macOS-14.0", etc.
+env.PLATFORM;     // "Windows", "OSX", "Linux", "Android"
+env.DEVICE;       // "desktop", "mobile"
+env.language();    // "en", "zh", etc.
+env.userName();    // current user
+env.machineName(); // computer name
+env.arguments();   // command line args array
 
 // Functions
-env.language();       // "en", "zh", etc.
-env.country();        // "US", "CN", etc.
-env.userName();       // Current user
-env.machineName();    // Computer name
-env.arguments();      // Command line args
+env.launch("url");           // open in default browser
+env.exec("scapp.exe", "main.html");
+env.path("desktop");            // Desktop folder
+env.path("documents");          // Documents folder
+env.home("relpath");            // resolve to sciter.dll location
+env.homeURL("relpath");         // same as file:// URL
 
-// Launch applications
-env.launch("https://sciter.com");
-env.launch("/path/to/file.pdf");
+// Environment variables
+env.variable("PATH");           // read
+env.variable("MY_VAR", "value"); // set
+env.variable("MY_VAR", null);       // unset
 
-// Well-known folders
-env.path("desktop");     // Desktop folder
-env.path("documents");   // Documents folder
-env.path("downloads");   // Downloads folder
-env.path("appdata");     // App data folder
-env.drives();            // -> ["C:", "D:"] on Windows
+// Drives
+env.drives();    // → ["C:", "D:"]
 ```
 
-### Module `@storage` (NEW in 5.0)
+### Module `@storage` (Persistent Database)
 
-Persistent key-value storage with indexing:
+Key-value database with indexing:
 
 ```js
 import * as Storage from "@storage";
 
-// Open database
 const storage = Storage.open(env.path("documents") + "/app.db");
-
-// Initialize with indexes
-storage.root = {
-    usersByName: storage.createIndex("string", true),  // unique
-    logsByDate: storage.createIndex("date", false)     // non-unique
+storage.root = storage.root || {
+  usersByName: storage.createIndex("string", true),
+  logsByDate: storage.createIndex("date", false)
 };
 
-// Use indexes
-storage.root.usersByName.set("John", { name: "John" });
+storage.root.usersByName.set("John", {name: "John", age: 30});
 const user = storage.root.usersByName.get("John");
 
-// Register classes for prototype restoration
 storage.registerClass(User);
 storage.commit();
+storage.close();
 ```
 
-### Module `@debug`
-
-Debugging for Inspector integration:
+### Module `@debug` (Developer Tools)
 
 ```js
 import * as debug from "@debug";
 
-// Exception handling
 debug.setUnhandledExceptionHandler((err) => {
-    console.error(err.stack);
+  console.error(err.stack);
 });
 
-// Console redirection
-debug.setConsoleOutputHandler((subsystem, severity, msg) => {
-    log(subsystem, severity, msg);
-    return true;
-});
-
-// Call stack inspection
-const frame = debug.callStackAt(0);
-// { functionName, fileName, lineNo, isNative }
-
-// Element inspection
-const uid = debug.getUIDofElement(el);
-debug.highlightElement(el);
-debug.getStyleRulesOfElement(el);
+debug.callStackAt(0);  // → {functionName, fileName, lineNo, isNative}
 ```
 
-## Global Functions
-
-Standard Web API globals available in Sciter:
-
-### Timers
-
-```js
-// One-shot timer
-const timerId = setTimeout(() => {
-  console.log("Executed after delay");
-}, 1000);
-
-// Clear timeout
-clearTimeout(timerId);
-
-// Repeating interval
-const intervalId = setInterval(() => {
-  console.log("Executed every second");
-}, 1000);
-
-// Clear interval
-clearInterval(intervalId);
-
-// Animation frame (synced with display refresh, ~60fps)
-const animId = requestAnimationFrame(() => {
-  console.log("Next paint frame");
-});
-
-// Cancel animation frame
-cancelAnimationFrame(animId);
-```
-
-### Console
-
-```js
-console.log("Basic log");
-console.log("Formatted: %s = %d", "answer", 42);
-
-// Custom exception handler (override default)
-console.reportException = function(err, isPromise) {
-  Window.this.modal(<alert>{err.toString()}</alert>);
-  return "";
-};
-
-console.warn("Warning message");
-console.error("Error message");
-```
-
-### HTTP Client
-
-```js
-// Basic fetch
-const response = await fetch("https://api.example.com/data");
-const data = await response.json();
-
-// With options
-const response = await fetch(url, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ key: "value" })
-});
-```
-
-### Sciter-Specific Globals
-
-```js
-// printf formatting (C-style, with %v and %V extensions)
-const formatted = printf("Value: %v", { a: 1 });  // JSON output
-
-// scanf parsing
-const values = scanf("%d %s", "42 hello");  // [42, "hello"]
-
-// Module evaluation
-const module = evalModule("export const x = 42;", "inline:module");
-// module.x === 42
-
-// Load script synchronously
-loadScript("utils.js");
-
-// Load script module synchronously
-const exports = loadScriptModule("mymodule.js");
-```
-
-### Global Properties
-
-```js
-// Global namespace (aliased as `window`)
-globalThis.someValue = 123;
-window.someValue;  // 123
-
-// Device pixel ratio (HiDPI/Retina support)
-const dpr = devicePixelRatio;  // e.g., 2.0 on Retina
-```
+---
 
 ## Graphics API
 
-Sciter's 2D Graphics API for canvas, element painting, and offscreen rendering.
-
-### Graphics Class
+### Graphics.Image
 
 ```js
-// Get graphics context
-const g = canvas.toPixels();
-// OR in element.paintContent(g => { ... })
+// Load from URL
+const img = await Graphics.Image.load("photo.png");
 
-// State
-g.save(); g.restore();
-g.translate(x, y); g.scale(sx, sy); g.rotate(angle);
+// Create from drawing function
+const img = new Graphics.Image(100, 100, g => {
+  g.fillRect(0, 0, 100, 100, #000000);
+});
 
-// Drawing
-g.beginPath(); g.moveTo(x,y); g.lineTo(x,y); g.stroke(); g.fill();
-g.fillRect(x, y, w, h);
-g.fillText(text, x, y);
+// Save to bytes
+img.toBytes("png");
 
-// Sciter-specific draw()
-g.draw(path, { x, y, stroke: true, fill: "evenodd" });
-g.draw(image, { x, y, width, height, opacity: 0.5 });
-g.draw(text, { x, y, alignment: 5 });  // 5 = center
-
-// Layer/clipping
-g.pushLayer(x, y, w, h, opacity);
-g.pushLayer(path);
-g.pushLayer(maskImage, useAlpha);
-g.popLayer();
+// Pixel color lookup
+const color = img.colorAt(50, 50);
 ```
 
-### Graphics.Color
+### Graphics.Text
+
+Text block for measurement and drawing:
 
 ```js
-// Create colors
-const c1 = Color.rgb(1.0, 0.0, 0.0);      // Float 0-1
-const c2 = Color.RGB(255, 0, 0);          // Int 0-255
-const c3 = Color.hsv(0, 1.0, 1.0);        // HSV
-const c4 = Color.hsl(0, 1.0, 0.5);        // HSL
+const textLayout = new Graphics.Text("Hello World\nLine 2\nLine 3");
 
 // Properties
-c1.r, c1.g, c1.b, c1.a;   // Float channels
-c1.R, c1.G, c1.B, c1.A;   // Int channels
-const [h,s,v] = c1.hsv;   // HSV array
-const [h,s,l] = c1.hsl;   // HSL array
+textLayout.lines;        // number of text lines
+textLayout.chars;         // text content (read/write)
+textLayout.style;          // CSS styles (read/write)
+textLayout.class;          // CSS class name
 
-// Morphing
-const mid = Color.morph(Color.RGB(255,0,0), Color.RGB(0,0,255), 0.5);
+// Methods for measurement
+const [minW, maxW, usedW] = textLayout.width();
+textLayout.height(usedH);  // sets used height
+
+// Get line text
+const lineText = textLayout.lineChars(lineNo);
 ```
 
 ### Graphics.Path
 
 ```js
 const path = new Graphics.Path();
-path.moveTo(x, y); path.lineTo(x, y);
-path.arc(x, y, r, start, end);
-path.rect(x, y, w, h);
+path.moveTo(x, y);
+path.lineTo(x, y);
+path.arc(x, y, r, s, e);
 path.closePath();
-
-// Test point
-path.isPointInside(x, y);
-
-// Bounds
-const rect = path.box();
-const [x1,y1,x2,y2] = path.bounds();
-
-// Combine paths
-const union = path.combine("union", otherPath);
 ```
 
-### Graphics.Image
+### Color
 
 ```js
-// Load
-const img = await Graphics.Image.load("image.png");
-const img = Graphics.Image.load("image.png", true);  // Sync
-
-// Create from painter
-const img = new Graphics.Image(w, h, (g) => {
-    g.fillStyle = Color.rgb(1,0,0);
-    g.fillRect(0, 0, w, h);
-});
-
-// Export
-const png = img.toBytes("png");
-const jpeg = img.toBytes("jpeg", 85);
-
-// Read pixel
-const color = img.colorAt(x, y);
+Color.rgb(1.0, 0, 0);        // RGB (0..255)
+Color.hsv(0, 1, 1);          // HSV
+Color.hsl(0, 1, 0.5);        // HSL
+Color.morph(base, lighten:25%);  // color transformations
 ```
 
-### Graphics.Brush
-
-```js
-// Linear gradient
-const brush = Graphics.Brush.createLinearGradient(x1, y1, x2, y2);
-brush.addColorStop(0.0, Color.RGB(255,0,0));
-brush.addColorStop(1.0, Color.RGB(0,0,255));
-
-// Radial gradient
-const brush = Graphics.Brush.createRadialGradient(x, y, r);
-
-// Tile
-const brush = Graphics.Brush.createTile(image);
-
-// Use
-g.fillStyle = brush;
-g.strokeStyle = brush;
-```
-
-## Element Extension & Reactor Components
-
-Sciter provides two ways to create custom UI components: extending Element class (DOM Components) and Reactor (JSX) components.
-
-### Extending Element Class
-
-Create reusable UI components by extending the built-in Element class:
-
-**Module with Export (Recommended):**
-```js
-// my-widget.js
-export class MyWidget extends Element {
-  // Constructor (optional)
-  constructor() {
-    super();  // Always call super()
-    this.value = 0;
-  }
-
-  // Called when attached to DOM
-  componentDidMount() {
-    // Setup timers, subscriptions
-    // DOM methods are available here
-  }
-
-  // Called before removal from DOM
-  componentWillUnmount() {
-    // Cleanup resources (clear timers, etc.)
-  }
-
-  // Event handlers (special syntax)
-  ["on click at button"]() {
-    this.value++;
-    this.componentUpdate({ value: this.value });
-    this.requestPaint();  // Trigger paintContent repaint
-  }
-}
-
-// Usage in other modules:
-// import { MyWidget } from "my-widget.js";
-```
-
-**CSS prototype attachment (alternative):**
-```css
-/* Attach component via CSS prototype */
-my-widget {
-  prototype: MyWidget url(my-widget.js);
-}
-```
-
-### Custom Painting with paintContent()
-
-Implement immediate mode rendering using Graphics API:
-
-```js
-class AnimatedWidget extends Element {
-  angle = 0;
-  _animationId = null;
-
-  componentDidMount() {
-    // Use standard Web API for animation
-    const animate = () => {
-      this.angle += 0.05;
-      this.requestPaint();  // Schedule repaint
-      this._animationId = requestAnimationFrame(animate);
-    };
-    this._animationId = requestAnimationFrame(animate);
-  }
-
-  componentWillUnmount() {
-    // Clean up animation
-    if (this._animationId !== null) {
-      cancelAnimationFrame(this._animationId);
-    }
-  }
-
-  // Paint layers available:
-  paintBackground(gfx) { /* Draw behind background */ }
-  paintContent(gfx) { /* Draw on top of background - MOST COMMON */ }
-  paintForeground(gfx) { /* Draw on top of content */ }
-  paintOutline(gfx) { /* Draw on top of everything */ }
-
-  paintContent(gfx) {
-    const { width, height } = this.box("client");
-
-    gfx.save();
-    gfx.translate(width / 2, height / 2);
-    gfx.rotate(this.angle);
-
-    gfx.fillStyle = Color.rgb(0.2, 0.6, 1.0);
-    gfx.fillRect(-50, -50, 100, 100);
-
-    gfx.restore();
-  }
-}
-```
-
-**Key paintContent patterns:**
-- Always call `this.requestPaint()` to schedule repaint
-- Use `this.box("dimension")` for element size
-- Use `gfx.save()` / `gfx.restore()` for transformations
-- Combine with Reactor for hybrid components
-
-### Element.box() - Getting Element Metrics
-
-The `Element.box()` method returns geometric information about elements:
-
-```js
-element.box(boxType[, relativeTo[, asPpx]]) : Rect
-// Returns: Graphics.Rect object with properties [x, y, width, height]
-```
-
-**boxType** (first argument) - defines which metric to return:
-
-| boxType | Description |
-|---------|-------------|
-| `"inner"` | Inner box of the element (content area) |
-| `"border"` | Border box (including borders) |
-| `"padding"` | Padding box |
-| `"margin"` | Margin box |
-| `"client"` | Client/scrollable area (padding minus scrollbars) |
-| `"content"` | Content outline (scrollable content size) |
-| `"caret"` | Caret position (if any) |
-| `"icon"` | Position of foreground image |
-| `"scroll"` | Projection of client rect on content box |
-| `"dimension"` | `[width, height]` - just the size |
-| `"xywh"` | `[x, y, width, height]` - position and size |
-| `"rect"` | Same as `"xywh"` |
-
-**relativeTo** (second argument, optional) - coordinate system:
-
-| relativeTo | Description |
-|------------|-------------|
-| `"self"` | (default) Relative to the element itself |
-| `"parent"` | Relative to DOM parent |
-| `"document"` | Relative to root document |
-| `"window"` | Relative to window client area |
-| `"screen"` | Absolute screen coordinates |
-| `"container"` | Relative to nearest positioned container |
-| `Element` | Relative to specific element reference |
-
-**asPpx** (third argument, optional) - if `true`, returns screen/physical pixels instead of CSS DIPs
-
-```js
-// Get element size
-const [width, height] = this.box("dimension");
-
-// Get position relative to document
-const [x, y, w, h] = this.box("inner", "document");
-
-// Get absolute screen position in physical pixels
-const rect = this.box("border", "screen", true);
-```
-
-### Reactor (JSX) Components
-
-Reactor is Sciter's native JSX implementation - no transpilation needed:
-
-**Function Component:**
-```js
-function Welcome(props) {
-  return <h1>Hello, {props.name}</h1>;
-}
-```
-
-**Class Component:**
-```js
-class Clock extends Element {
-  time = new Date();
-  _intervalId = null;
-
-  componentDidMount() {
-    // Use setInterval instead of Element.timer()
-    this._intervalId = setInterval(() => {
-      this.componentUpdate({ time: new Date() });
-    }, 1000);
-  }
-
-  componentWillUnmount() {
-    // Clean up interval
-    if (this._intervalId !== null) {
-      clearInterval(this._intervalId);
-    }
-  }
-
-  render() {
-    return <div>Time: {this.time.toLocaleTimeString()}</div>;
-  }
-}
-```
-
-**Rendering with patch():**
-```js
-// Initial render
-document.body.patch(<Welcome name="World" />);
-
-// Update (efficient DOM diffing)
-document.body.patch(<Welcome name="Sciter" />);
-```
-
-### Component Lifecycle
-
-| Method | When Called | Purpose |
-|--------|-------------|---------|
-| `constructor()` | Object creation | Initialize properties |
-| `this(props,kids)` | Props/kids received | Process new data |
-| `render()` | Update needed | Return JSX virtual DOM |
-| `componentDidMount()` | After DOM attachment | Setup timers, subscriptions |
-| `componentWillUnmount()` | Before DOM removal | Cleanup resources |
-| `componentDidUpdate()` | After componentUpdate() | Post-render adjustments |
-| `paintContent(gfx)` | Repaint needed | Custom graphics rendering |
-
-### State Updates
-
-```js
-class Counter extends Element {
-  count = 0;
-
-  increment() {
-    // WRONG: Direct mutation doesn't trigger re-render
-    // this.count++;
-
-    // CORRECT: Use componentUpdate
-    this.componentUpdate({ count: this.count + 1 });
-  }
-
-  render() {
-    return <div>
-      <span>{this.count}</span>
-      <button click={() => this.increment()}>+</button>
-    </div>;
-  }
-}
-```
-
-### List Rendering with Keys
-
-```js
-function TodoList({ todos }) {
-  return <ul>
-    {todos.map(todo =>
-      <li key={todo.id}>
-        {todo.text}
-      </li>
-    )}
-  </ul>;
-}
-```
-
-### Hybrid Components (JSX + Custom Painting)
-
-```js
-class HybridWidget extends Element {
-  value = 50;
-
-  render() {
-    return <div .hybrid>
-      <label>Value: {this.value}</label>
-      <input #slider type="hslider" min="0" max="100" value={this.value} />
-    </div>;
-  }
-
-  componentDidMount() {
-    this.$("#slider").on("change", () => {
-      this.value = parseInt(this.$("#slider").value);
-      this.componentUpdate();
-      this.requestPaint();  // Trigger paintContent
-    });
-  }
-
-  paintContent(gfx) {
-    const { width, height } = this.box("dimension");
-    const barHeight = (this.value / 100) * height;
-
-    gfx.fillStyle = Color.hsv((this.value / 100) * 120, 0.7, 0.9);
-    gfx.fillRect(0, height - barHeight, width, barHeight);
-  }
-}
-```
-
-### Event Handler Syntax
-
-```js
-class MyComponent extends Element {
-  // Basic event
-  ["on click"]() { }
-
-  // Event with parameter
-  ["on click"](evt) {
-    console.log(evt.x, evt.y);
-  }
-
-  // Delegated event (selector)
-  ["on click at button.close"]() { }
-
-  // :root selector (component itself)
-  ["on click at :root"]() { }
-
-  // Immediate child selector
-  ["on click at :root > button"]() { }
-}
-```
-
-## Common Patterns
-
-### Async Operations with Promises
-
-```cpp
-class NativePromise : public sciter::om::asset<NativePromise> {
-    sciter::value resolver;
-    sciter::value rejector;
-
-public:
-    sciter::value then(sciter::value r, sciter::value rej) {
-        resolver = r;
-        rejector = rej;
-        return this;
-    }
-
-    void resolve(const sciter::value& result) {
-        resolver.call(result);
-    }
-};
-```
-
-### Custom Behaviors (C++)
-
-```cpp
-struct MyBehavior : public sciter::event_handler {
-    virtual bool subscription(HELEMENT he, UINT& event_groups) {
-        event_groups = HANDLE_DRAW | HANDLE_TIMER;
-        return true;
-    }
-
-    virtual void attached(HELEMENT he) { /* ... */ }
-    virtual void detached(HELEMENT he) { /* ... */ }
-    virtual bool handle_timer(HELEMENT he, TIMER_PARAMS& params) { /* ... */ }
-    virtual bool handle_draw(HELEMENT he, DRAW_PARAMS& params) { /* ... */ }
-
-    SOM_PASSPORT_BEGIN_EX(assetInterface, MyBehavior)
-        SOM_FUNCS(SOM_FUNC(start))
-    SOM_PASSPORT_END
-};
-```
-
-## Build Configuration
-
-### CMake Requirements
-
-- Minimum CMake 3.20.0
-- C++17 standard
-- Platform-specific configurations for macOS/Windows
-
-### Required Definitions
-
-```cmake
-add_definitions(-DUNICODE -D_UNICODE)
-if(LOCALMODE)
-    add_definitions(-DLOCAL_MODE)
-endif()
-```
-
-### Dependencies
-
-```cmake
-find_package(spdlog CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-```
-
-### Alternative: gsciter (Universal Browser Project)
-
-For a simpler integration approach, consider using the `gsciter` project pattern from `integrate/gsciter/`:
-
-**Key features:**
-- Single source file works across all platforms (Windows, macOS, Linux)
-- Resources packaged as compiled archive
-- Simple, minimal C++ code (~60 lines)
-- Ideal for browser-style applications
-
-**Basic structure:**
-```cpp
-#include "sciter-x-window.hpp"
-
-class gSciter: public sciter::window {
-public:
-    gSciter() : window(SW_TITLEBAR | SW_RESIZEABLE | SW_CONTROLS | SW_MAIN) {}
-};
-
-int uimain(std::function<int()> run) {
-    // Enable features
-    ::SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES,
-                      ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
-
-    // Load resources
-    sciter::archive::instance().open(aux::elements_of(resources));
-
-    // Create and load window
-    sciter::om::hasset<gSciter> pwin = new gSciter();
-    pwin->load(WSTR("this://app/default.htm"));
-
-    return run();
-}
-```
-
-**When to use gsciter vs full template:**
-- **gsciter**: Simple browser-style apps, minimal C++ needs
-- **Full template**: Complex native integration, custom behaviors, multiple windows
-
-## Resource Loading
-
-### Local Mode (Development)
-
-Resources loaded from filesystem - use for development:
-```cpp
-#define LOCAL_MODE
-```
-
-### Archive Mode (Production)
-
-Resources compiled into binary:
-```cpp
-#include "resources.cpp"
-sciter::archive::instance().open(aux::elements_of(resources));
-appBaseUrl = WSTR("this://app/main.htm");
-```
-
-## scapp Mode (Pure HTML/CSS/JS)
-
-scapp is the Sciter engine packaged as a standalone executable. No C++ compilation required.
-
-### Running with scapp
-
-```bash
-# Run specific HTML file
-scapp main.htm
-
-# With debug inspector
-scapp main.htm --debug
-
-# Without arguments - looks for default files in order:
-scapp
-# Searches for: run.js → scapp.htm → scapp.html → main.htm → main.html → index.htm → index.html
-```
-
-### scapp Project Structure
-
-Simple HTML + JS - just two files needed:
-
-```
-myapp/
-├── main.htm           # Entry point (HTML + CSS + JS)
-└── resources/         # Optional: images, fonts, etc.
-```
-
-**Or with separate files:**
-```
-myapp/
-├── main.htm
-├── styles.css
-├── app.js
-└── resources/
-```
-
-### Entry Point Files (Without Arguments)
-
-When `scapp` is run without arguments, it looks for these files in order:
-
-| File | Mode |
-|------|------|
-| `run.js` | Bootstrap mode (JS runtime configuration) |
-| `scapp.htm` / `scapp.html` | HTML window mode |
-| `main.htm` / `main.html` | HTML window mode |
-| `index.htm` / `index.html` | HTML window mode |
-
-First file found is used.
-
-### Basic main.htm
+---
+
+## Built-in Behaviors
+
+Native DOM element controllers attached via CSS `behavior:name`.
+
+### Buttons
+
+| Element | Behavior | Notes |
+|---------|----------|
+| `<button>` | `behavior:button` | Click handler, keyboard support |
+| `<input\|checkbox>` | `behavior:check` | `:checked` state, tristate |
+| `<input\|radio>` | `behavior:radio` | Radio group with same `name` |
+| `<a href>` | `behavior:hyperlink` | Navigation, `target` attribute |
+| `<label>` | `behavior:label` | Focus delegation |
+| Any element | `behavior:clickable` | Add click/tap support |
+
+### Editors
+
+| Element | Behavior | Key Features |
+|---------|----------|--------|
+| `<input\|text>` | `behavior:edit` | `el.edit.*` methods |
+| `<input\|password>` | `behavior:password` | Same as edit + `el.masked.*` |
+| `<input\|masked>` | `behavior:masked-edit` | Input mask: `#`=digit, `_`=any, `@`=alpha |
+| `<input\|integer>` | `behavior:integer` | — | `min`, `max`, `step` |
+| `<input\|decimal>` | `behavior:decimal` | — | Decimal input with precision |
+| `<input\|number>` | `behavior:number` | — | Numeric with up/down buttons |
+| `<textarea>` | `behavior:textarea` | — | Multi-line text |
+| `<plaintext>` | `behavior:plaintext` | Multi-line plaintext, syntax highlighting |
+| `<htmlarea>` | `behavior:htmlarea` | WYSIWYG HTML editor (full list below) |
+
+### Selects
+
+| Element | Behavior | Key Features |
+|---------|----------|--------|
+| `<select\|list>` | `behavior:select` | `el.select.*` | `multiple`, `multiple="checkmarks"` |
+| `<select\|tree>` | `behavior:select` | Hierarchical `<option>` |
+| `<select>` / `<select\|dropdown>` | `behavior:select-dropdown` | `editable`, `showPopup()`, `hidePopup()` |
+
+### Date/Time
+
+| Element | Behavior | Notes |
+|---------|----------|--------|
+| `<input\|calendar>` | `behavior:calendar` | Visual calendar picker |
+| `<input\|date>` | `behavior:date` | Date input with masked-edit caption |
+| `<input\|time>` | `behavior:time` | Time input |
+
+### Containers
+
+| Element | Behavior | Key Features |
+|---------|----------|--------|
+| `<form>` | `behavior:form` | `el.form.*` | Compound value (JSON map) |
+| `<frame>` / `<iframe>` | `behavior:frame` | `el.frame.*` | `loadFile(url)`, `loadHtml(html, url)` |
+| `<frameset>` | `behavior:frame-set` | — | Resizable frame splitter |
+| `<details>` | `behavior:details` | — | Collapsible section |
+
+### Outputs & Animation
+
+| Element | Behavior | Notes |
+|---------|----------|--------|
+| `<output>` | `behavior:output` | Formatted output, `format` attribute |
+| `<progress>` | `behavior:progress` | — | Progress bar |
+| `<meter>` | `behavior:progress` | Static progress |
+| `<video>` | `behavior:video` | `el.video.*` | Video playback, `src` attribute |
+| `<lottie>` | `behavior:lottie` | `el.lottie.*` | Lottie animation |
+
+### Lists
+
+| Element | Behavior | Key Features |
+|---------|----------|--------|
+| Any element | `behavior:virtual-list` | `el.vlist.*` | Large datasets, `navigateTo()`, `advanceTo()` |
+| Any element | `behavior:expandable-list` | — | Collapsible list groups |
+
+### Menus
+
+| Element | Behavior | Notes |
+|---------|----------|--------|
+| `<menu>` | `behavior:menu` | Context/popup menu |
+| `<menu.bar>` | `behavior:menu-bar` | Menu bar with dropdown submenus |
+
+### Auxiliary
+
+| Element | Behavior | Notes |
+|---------|----------|--------|
+| `<scrollbar>` | `behavior:scrollbar` | Custom scrollbar |
+| `<terminal>` | `behavior:terminal` | ANSI terminal. `terminal.write()`, `terminal.resize()` |
+| `<details>` | `behavior:details` | — | Collapsible section |
+
+---
+
+## scapp Mode Quick Start
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
     <title>My App</title>
-    <meta charset="utf-8">
     <style>
         body { flow: vertical; padding: 20dip; font: system; }
         h1 { color: #2c3e50; }
@@ -1321,39 +941,44 @@ First file found is used.
 </head>
 <body>
     <h1>Hello from scapp!</h1>
-
     <script type="module">
         import * as env from "@env";
-        import * as sys from "@sys";
-
         document.$("h1").textContent = `Hello from ${env.PLATFORM}`;
     </script>
 </body>
 </html>
 ```
 
-Run: `scapp` (if named main.htm) or `scapp main.htm`
+Run: `scapp main.htm --debug`
 
-### scapp vs C++ Mode
+---
 
-| Feature | scapp Mode | C++ Mode |
-|---------|-----------|----------|
-| Compilation | Not needed | CMake + build required |
-| Prototyping | ✅ Fast | ❌ Slower |
-| Cross-platform | ✅ Same files work everywhere | ❌ Need per-platform builds |
-| Native API | @sys, @env, @sciter modules | Full C++ API |
-| Custom behaviors | ❌ JS only | ✅ C++ behaviors |
-| Deployment | Copy scapp.exe + files | Custom executable |
-| Use for | Web apps, prototypes, tools | System tools, performance-critical |
+**Asset References**:
 
-### Debugging
+- **C++ Integration**: See **cpp-integration.md** for SOM_PASSPORT, custom behaviors, uimain()
+- **Behaviors**: Full behavior reference — see individual behavior files in docs/md/behaviors/
+- **Storage**: See `docs/md/storage/` for complete database API
 
-```bash
-# Enable inspector
-scapp main.htm --debug
+---
 
-# Or add to HTML
-<html window-debug="true">
-```
+## Quick Reference Cards
 
-## Asset References
+### CSS vs Web Standard — Quick Lookup
+
+| ❌ Web Standard | ✅ Sciter |
+|----------------|-----|
+| Layout | `display: flex` | `flow: horizontal`/`vertical` |
+| Grid | `display: grid` | `flow: grid(...)` |
+| Sizing | `flex-grow` | `width: *` / `width: 0.5*` |
+| Media | `@media (max-width: 600px)` | `@media width < 600px` |
+| Variables | `--custom: value` | `var(name):` + `attr(name):` |
+
+### Critical Sciter Rules
+
+1. **Always self-close** — `<img />`, `<br />`, `<input />` must be explicitly closed
+2. **Use `flow` for layouts** — not `display: flex`
+3. **Use `dip` for sizing** — device-independent pixels (1/96")
+4. **Use `border-spacing: *`** for equal spacing between children
+5. **JSX syntax** — use comparison operators: `@media width < 600px` (no parentheses)
+6. **Signals over componentUpdate()** — Use `Reactor.signal()` for reactive state
+7. **Element references via `var`** — JSX: `<div var={this.myRef}>`

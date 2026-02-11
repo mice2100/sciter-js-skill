@@ -197,7 +197,7 @@ Define `child { height:* }` if you want some child to fill vertical space left i
 
 ## flow:vertical-wrap
 
-Children are replaced in multiple rows, if they do not fit in one row:
+Children are replaced in multiple columns if they do not fit in one column:
 
 ![Multiple columns](images/vertical-wrap.png)
 

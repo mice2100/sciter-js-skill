@@ -100,16 +100,31 @@ sctr.parseValue(string): any
 
 Parses _string_ value by "JSON++ rules", here are valid inputs:
 
-* `"true"` -> _true_ value;
-* `"null"` -> _null_ value;
-* `"1234"` ->  Numeric value 1234;
-* `"0xFF"` ->  Numeric value 255 (hex);
-* `"2021-12-01"` -> date 2021-12-01 (in ISO format);
-* `"12px"` -> value of Length class;
-* `"1rad"` -> value of Angle class;
-* `"{name1:val1, name2:val2,...}"` -> object value;
-* `"{some-name1:val1; some-name2:val2; ...}"` -> CSS kind of object value;
-* `"[val1, val2, ...]"` -> array;
+* `true` -> _true_ value;
+* `null` -> _null_ value;
+* `1234` ->  Numeric value 1234;
+* `1234n` -> BigInt (64bit) value 1234;
+* `0xFF` ->  Numeric value 255 (hex);
+* `0d2021-12-01` -> date 2021-12-01 (in ISO format);
+* `12px` -> value of Length class;
+* `1rad` -> value of Angle class;
+* `{name1:val1, name2:val2,...}` -> object value;
+* `[val1, val2, ...]` -> array;
+
+* Map and array separators are either `;` or standard JSONs `,` :
+```
+{
+  foo: 1;
+  bar: 2; 
+}
+```  
+* CSS name tokens:
+```
+{
+  foo-bar: zap; // parsed as "foo-bar":"zap";
+}
+```
+
 
 ### devicePixels()
 

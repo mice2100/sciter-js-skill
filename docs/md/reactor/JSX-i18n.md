@@ -1,11 +1,11 @@
 ---
 sidebar_position: 10
-title: Internalization Support
+title: Internationalization Support
 toc_min_heading_level: 2
 toc_max_heading_level: 5
 ---
 
-# Internalization support in Sciter's JSX...
+# Internationalization support in Sciter's JSX...
 
 Sciter offers built-in, **zero-runtime-cost** mechanism for JSX literals translation.  
 
