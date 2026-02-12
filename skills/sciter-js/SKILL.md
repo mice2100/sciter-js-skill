@@ -20,6 +20,7 @@ Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTM
 | `flex-grow`, `flex-shrink` | Flex units: `width: *`, `width: 0.5*` |
 | `@media (max-width: 600px)` | `@media width < 600px` (comparison operators, no parens) |
 | CSS `var(--name)` only | Sciter also supports `var(name):` declaration form |
+| CSS `var()` comma syntax | Sciter's `var()` does **NOT** support commas. Use separate declarations: `var(name): value;` |
 | `display: none` | `visibility: none` (Sciter equivalent) |
 | `rem`, `em` units (for font sizes) | Use `dip` for device-independent pixels |
 | CSS `calc()` with flex units | Flex units cannot be used inside calc |
@@ -52,7 +53,28 @@ Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTM
 | **Space after element** | Space is optional after element name (not before `=`), unlike HTML |
 | **Custom tags allowed** | `<toolbar>`, `<user-card>`, etc. with custom `style="display:block"` |
 | **Attribute events** | Not supported in static HTML; use JSX instead: `<button onclick={...}>` |
+| **Numeric input** | Use `<input|text filter="0~9">` instead of `<input|number>` — number input styling is hard to customize |
 | **`&platform-cmd;`** | Replaced with `Ctrl/CMD...` in strings |
+
+### HTML Best Practices
+
+#### Numeric Input with Filter
+
+Use `<input|text>` with `filter` attribute for numeric input:
+
+```html
+<!-- ✅ CORRECT: Styled numeric input -->
+<input|text filter="0~9" id="webServerPort" placeholder="8888">
+
+<!-- ❌ AVOID: Number input styling is hard to customize -->
+<input|number id="port" min="0" max="9999">
+```
+
+**Filter syntax examples:**
+- `filter="0~9"` — allow digits 0-9
+- `filter="0~9."` — allow decimal numbers
+- `filter="a~z A~Z"` — allow alphabetic characters
+- `filter="0~9 a~z"` — allow alphanumeric
 
 ---
 
@@ -236,6 +258,28 @@ Named style sets for component scoping:
 
 Apply via CSS: `.card { style-set: card-styles; }`
 Apply via JS/JSX: `CSS.set()` function.
+
+### CSS Variables (`var()`)
+
+Sciter supports CSS variables but with **different syntax** than standard CSS:
+
+```css
+/* ✅ CORRECT: Sciter var syntax */
+:root {
+  var(primary-color): #3498db;
+  var(spacing): 8dip;
+}
+
+button {
+  background: var(primary-color);
+  padding: var(spacing);
+}
+
+/* ❌ WRONG: Standard CSS comma syntax not supported */
+:root {
+  --primary-color: #3498db, --spacing: 8dip;
+}
+```
 
 ### Sciter-Specific CSS Properties
 
