@@ -1,195 +1,141 @@
-# Sciter CSS Reference
+# Sciter CSS Cheat Sheet
 
-Complete reference for Sciter-specific CSS syntax and constraints.
+Comprehensive reference for Sciter-specific CSS.
 
-## Sciter "Prohibited" Web Standards
+## ⚠️ Differences from Web CSS
 
-These Web CSS features do NOT work in Sciter - use Sciter equivalents:
+| Web Standard | Sciter Equivalent | Notes |
+|--------------|-------------------|-------|
+| `display: flex` | `flow: horizontal` / `flow: vertical` | Use `flow` for layout |
+| `display: grid` | `flow: grid(...)` | ASCII-art grid |
+| `flex: 1` | `width: *` or `height: *` | Flex units for dimensions |
+| `gap: 10px` | `border-spacing: 10px` | Spacing between flow items |
+| `@media (max-width: 600px)` | `@media width < 600px` | JS-like comparison syntax |
+| `var(--name)` | `var(name)` | Name without dashes allowed |
+| `::placeholder` | `:empty` | Targets empty input value |
+| `vh` / `vw` | `100vh` / `100vw` | Supported but `*` often better |
 
-| Prohibited Property | Sciter Replacement |
-|---------------------|-------------------|
-| `display: flex` | `flow: horizontal`, `flow: vertical`, etc. |
-| `display: inline-flex` | `flow: horizontal` with inline-block children |
-| `display: grid` | `flow: grid(...)` |
-| `flex-direction` | Use appropriate `flow` value |
-| `flex-wrap` | Use `horizontal-wrap` or `vertical-wrap` |
-| `justify-content` | Use `margin: *`, `border-spacing: *` |
-| `align-items` | Use `vertical-align`, `horizontal-align` |
-| `grid-template` | `flow: grid(...)` template |
-| `gap` | `border-spacing` |
-
-## Flow Property Values
-
-```
-flow: default          - Auto-detect by content
-flow: horizontal       - Single row layout
-flow: vertical         - Single column layout
-flow: horizontal-wrap  - Multiple rows (wrapping)
-flow: vertical-wrap    - Multiple columns (wrapping)
-flow: stack           - Stacked elements (absolute positioning alternative)
-flow: grid(...)       - Explicit grid layout
-flow: row(...)        - Automatic row fills
-flow: text            - Text-only layout
-```
-
-## Flex Units
-
-Flex units (`*`, `1*`, `0.5*`, etc.) can be applied to:
-- `width`, `height`
-- `margin-*`, `padding-*`
-- `border-*-width`
-- `size` (shorthand for width + height)
-
-```
-width: *         /* 1* - fills available space */
-width: 2*        /* 2x the space of 1* */
-width: 0.5*      /* Half the space of 1* */
-size: *          /* width: *; height: *; */
-margin: 0.3* 0.7* /* 30/70 split */
-```
-
-## Grid Layout Syntax
-
-```
-flow: grid(
-    1 2 3,
-    4 5 5,
-    6 6 6
-);
-```
-
-Numbers represent DOM child order (1-based). Same number = spanned cell.
-
-### Grid with Explicit Rows/Columns
+## Layout: `flow`
 
 ```css
-flow-rows: 100px * max-content;
-flow-columns: repeat(3, minmax(100px, 1*));
-```
-
-## Style Sets (@set)
-
-Reusable style groups with local scope:
-
-```css
-@set MyButton {
-    :root { background: blue; }
-    :hover { background: darkblue; }
-    :active { background: navy; }
-    :disabled { opacity: 0.5; }
+.row { flow: horizontal; }
+.col { flow: vertical; }
+.wrap-row { flow: horizontal-wrap; }
+.grid { 
+  flow: grid(1 1 1,
+             2 3 3); 
 }
+.stack { flow: stack; } /* ~absolute position */
+```
 
-button {
-    @set MyButton; /* Apply style set */
+## Units
+
+- **`dip`**: Device Independent Pixels (1/96 inch). **Use for all layout.**
+- **`px`** / **`ppx`**: Physical pixels.
+- **`*` (Flex)**: Remainder of free space. `1*`, `2*`, `0.5*`.
+
+```css
+.container { 
+  width: 100dip; 
+  height: *;        /* Fill remaining height */
+  padding: 10dip;   
+  margin: *;        /* Center in parent */
 }
 ```
 
-## Behaviors and Aspects
+## Selectors & State
 
-### Prototype (Class Controller)
+| Selector | Description |
+|----------|-------------|
+| `input|text` | `<input type="text">` |
+| `div#id` | `<div id="id">` |
+| `:hover` | Mouse over |
+| `:active` | Mouse down |
+| `:focus` | Has focus |
+| `:checked` | Checked/Active state |
+| `:expanded` | Expanded (tree/select) |
+| `:empty` | Empty (input value or children) |
+| `:busy` | Loading (frame/img) |
+| `:popup` | Is popup |
+| `:owns-popup` | Hosts popup |
+
+## At-Rules
+
+### `@media`
+```css
+@media width < 600px { ... }
+@media platform == "Windows" { ... }
+@media theme == "dark" { ... }
+```
+
+### `@set` (Style Sets)
+Used for component styling and isolating styles.
+```css
+@set MyStyles {
+  :root { background: red; }
+  .child { color: white; }
+}
+div { style-set: MyStyles; }
+```
+
+### `@mixin`
+```css
+@mixin Box(w,h) { width: @w; height: @h; }
+div { @Box(100px, 100px); }
+```
+
+### `@image-map` (Sprites)
+```css
+@image-map icons {
+  src: url(sprites.png);
+  cells: 2 2;
+  items: add, remove, edit, save;
+}
+button.add { background-image: image-map(icons, add); }
+```
+
+## Sciter Properties
+
+| Property | Usage |
+|----------|-------|
+| `behavior: name` | Attach native/JS behavior |
+| `prototype: Class url(...)` | Attach JS class |
+| `aspect: Func url(...)` | Attach JS function |
+| `size: w h` | Shorthand for width/height |
+| `hit-margin: 5dip` | Expand click area |
+| `popup-position: 7 1` | Anchor popup (Keypad 7 to 1) |
+| `cursor: url(...) x y` | Custom cursor |
+| `foreground: url(...)` | Foreground image layer |
+| `border-shape: path(...)` | Clip/border element to path |
+| `vertical-scrollbar: Set` | Custom scrollbar style set |
+
+## Scrollbar Styling
+
+Apply a style set to `vertical-scrollbar`.
 
 ```css
-element-name {
-    prototype: ClassName url(module.js);
-}
-```
-
-### Aspect (Functional Controller)
-
-```css
-*[attr] {
-    aspect: functionName url(module.js);
-}
-```
-
-### Parameterized Aspect
-
-```css
-chart {
-    aspect: Chart(type:donut, colors:#f00 #0f0) url(charts.js);
-}
-```
-
-## Sciter-Specific Pseudo-Classes
-
-```
-:current        - Currently focused element
-:captive        - Elements in captive context
-:owns-popup     - Elements that own open popup
-:missing        - Elements with missing required attributes
-:valid          - Form elements with valid values
-:invalid        - Form elements with invalid values
-:in-range       - Values within min/max
-:out-of-range   - Values outside min/max
-:required       - Required form fields
-:optional       - Optional form fields
-:read-only      - Read-only elements
-:read-write     - Editable elements
-```
-
-## Sciter-Specific Properties
-
-```
-context-menu: url(menu.htm); /* Custom context menu */
-foreground-image: url(...);  /* Layered images */
-foreground-repeat: ...;
-foreground-position: ...;
-text-selection: #color;      /* Selection color */
-text-selection: none;        /* No selection */
-```
-
-## HTML Shortcuts in CSS
-
-```css
-div#id.class { }  /* instead of div[id="id"][class="class"] */
-widget[type="x"]  /* attribute selector */
-```
-
-## Image Sprites (@image-map)
-
-```css
-@image-map my-sprites url(sprites.png) {
-    :icon1 { rect: 0px 0px 16px 16px; }
-    :icon2 { rect: 16px 0px 32px 16px; }
+@set StdScrollbar {
+  .base { background: #eee; }
+  .slider { background: #888; border-radius: 4px; }
+  .slider:hover { background: #666; }
+  .prev, .next { display: none; }
 }
 
-.icon1 {
-    background-image: my-sprites(icon1);
-}
+* { vertical-scrollbar: StdScrollbar; }
 ```
 
 ## Variables
 
-```css
-@variable --my-color #ff0000;
-@variable --spacing 10px;
-
-element {
-    background: var(--my-color);
-    margin: var(--spacing);
-}
-```
-
-## Conditional CSS (@media)
+Sciter variables:
 
 ```css
-@media (platform: "windows") { }
-@media (platform: "mac") { }
-@media (platform: "linux") { }
-@media (theme: "dark") { }
-@media (theme: "light") { }
-@media (min-width: 800px) { }
-```
-
-## Scrollbar Styling
-
-```css
-body {
-    scrollbar-virtual-mode: true; /* Mobile-style scrolling */
+:root {
+  var(main-color): #00f;
+  var(spacing): 10dip;
 }
 
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #888; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+div {
+  color: var(main-color);
+  padding: var(spacing);
+}
 ```

@@ -50,16 +50,16 @@ When using this skill alongside general **Frontend Design** advice (aesthetics, 
 
 **Prompt Pattern:**
 
-> "Design a [Component] using [Frontend Style] aesthetics, but **IMPLEMENT** it using strict Sciter.js rules."
+> "Design a [Component] using [Frontend Style] aesthetics, but **IMPLEMENT** it using strict Sciter.js rules. Refer to the 'Prohibited Patterns' table in the Sciter skill to translate standard CSS to Sciter equivalents."
 
 **Conflict Resolution Guide:**
 
 | Concept | Frontend Design (Aesthetic) | Sciter.js (Implementation) |
 | :--- | :--- | :--- |
-| **Layout** | "Use Flexbox/Grid" | **CSS**: Use `flow: horizontal`, `flow: vertical`, or `flow: grid()`. Use flex units (`width: *`) instead of `flex-grow`. |
+| **Layout** | "Use Flexbox/Grid" | **CSS**: Use `flow: horizontal`, `flow: vertical`, or `flow: grid()`. mapped in **Prohibited Patterns** table. |
 | **Sizing** | "Use `rem`/`em`" | **CSS**: Use `dip` (device-independent pixels). |
 | **Components** | "Use React/Vue" | **JS**: Use native **Reactor** (`class X extends Element`). Native `componentUpdate()`. |
 | **Interactive** | "Add event listeners" | **CSS/JS**: Use **Behaviors** (`behavior: button`, `behavior: clickable`) for native performance. |
-| **Icons** | "Use SVG / FontAwesome" | **CSS**: Use `behavior: icon` or `list-style-image` with Sciter's efficient path rendering. |
+| **Icons** | "Use SVG / FontAwesome" | **CSS**: Use `path()` or `icon()` (vector features). |
 
 **Rule of Thumb**: Use Frontend Design for *what it looks like*, use Sciter.js for *how it works*.

@@ -16,15 +16,14 @@ Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTM
 | ❌ Web Standard | ✅ Sciter Equivalent |
 |----------------|---------------------|
 | `display: flex` | `flow: horizontal` / `flow: vertical` |
-| `display: grid` | `flow: grid(...)` |
-| `flex-grow`, `flex-shrink` | Flex units: `width: *`, `width: 0.5*` |
-| `@media (max-width: 600px)` | `@media width < 600px` (comparison operators, no parens) |
-| CSS `var(--name)` only | Sciter also supports `var(name):` declaration form |
-| CSS `var()` comma syntax | Sciter's `var()` does **NOT** support commas. Use separate declarations: `var(name): value;` |
-| `display: none` | `visibility: none` (Sciter equivalent) |
-| `rem`, `em` units (for font sizes) | Use `dip` for device-independent pixels |
-| CSS `calc()` with flex units | Flex units cannot be used inside calc |
-| Standard CSS pseudo-elements only | Sciter-specific pseudo-elements: `::marker`, `::shadow` (block-level) |
+| `display: grid` | `flow: grid(...)` / `flow: row(...)` |
+| `flex: 1` / `flex-grow` | Flex units: `width: *`, `height: *` |
+| `gap` / `justify-content` | `border-spacing: *` or `margin: *` |
+| `@media (max-width: 600px)` | `@media width < 600px` (comparison operators) |
+| `var(--name)` | `var(name)` (no dashes required, no var() wrapper in decl) |
+| `calc(100% - 10px)` | Supported, but **cannot** use `*` units inside `calc()` |
+| `::placeholder` | `:empty` (styles empty input value) |
+| `::-webkit-scrollbar` | Use `vertical-scrollbar: "style-set-name"` |
 
 ### JavaScript — DO NOT USE these:
 
@@ -138,230 +137,185 @@ For native system access and custom behaviors. See **cpp-integration.md** for fu
 
 Sciter's CSS extends standard CSS with desktop-specific features for UI development.
 
-### Flow Layout (Primary Layout System)
+### Layout System (`flow` vs `display`)
 
-Sciter uses `flow` instead of `display: flex/grid`:
+Sciter uses **`flow`** for layout management (similar to flex/grid) and **`display`** for visibility/type (block/inline/none).
+
+| Flow Value | Description | Equivalent |
+|------------|-------------|------------|
+| `flow: vertical` | Children in a column | ~Flex Column |
+| `flow: horizontal` | Children in a row | ~Flex Row |
+| `flow: vertical-wrap` | Columns wrapping to next line | ~Flex Col Wrap |
+| `flow: horizontal-wrap` | Rows wrapping to next line | ~Flex Row Wrap |
+| `flow: stack` | Children on top of each other | ~Absolute Position |
+| `flow: grid(...)` | ASCII-art grid layout | ~Grid Template |
+| `flow: row(...)` | Named columns flow | ~Grid Rows |
+| `flow: text` | Text layout (like `<p>`) | Standard Flow |
 
 ```css
-/* Single row / column */
-.row  { flow: horizontal; }
-.col  { flow: vertical; }
+/* Stack Layout - simpler than absolute positioning */
+.overlay-container {
+  flow: stack;
+  size: *;
+}
+.background { size: *; }
+.foreground { margin: *; /* centered */ }
 
-/* Wrapping */
-.wrap-h { flow: horizontal-wrap; }
-.wrap-v { flow: vertical-wrap; }
-
-/* Stacked */
-.stack { flow: stack; }
-
-/* Grid — ASCII art layout */
-.grid {
+/* Grid Layout */
+.app-layout {
   flow: grid(
     1 1 1,
-    2 5 3,
-    4 4 4 4
+    2 3 4
   );
-}
-
-/* Named rows */
-.form { flow: row(label, input select); }
-
-/* Flex Units — Fill Free Space
-
-Flex units distribute **available space** proportionally:
-
-```css
-child { width: *; }       /* fill remaining space */
-child { width: 0.7*; }     /* 70% of free space */
-child { width: 2*; }        /* 2x weight */
-child { margin: 0.3* 0.7*; } /* flexible margins */
-.parent  { border-spacing: *; }  /* equal spacing between children */
-```
-
-**Important**: Flex units (`*`) cannot be used inside `calc()`.
-
-### CSS Units
-
-| Unit | Description | Usage |
-|------|-----------|------|
-| **px** | Physical pixels (1:1 on 96dpi), same as `ppx` | `width: 100px` |
-| **dip** | Device-independent pixels (1/96") - **PRIMARY UNIT** | `width: 8dip` |
-| **ppx** | Physical pixels - always 1:1 | `width: 10ppx` |
-| **in/cm** | Inches | `width: 2.54in` |
-| **%** | Percentage of parent | `width: 50%` |
-| **em/rem** | Font relative | `font-size: 1.2em` |
-| **vw/vh** | Viewport units | `width: 50vw` |
-| *** | Flex unit (equals `1*`) | `size: *` = width & height |
-
-**Width/Height units** (for responsive sizing):
-
-```css
-/* Width based on parent */
-child { width: width(X%); height: height(Y%); }
-
-/* OR percentage of parent's content-box */
-child { width: width(content-box); height: height(content-box); }
-```
-
-### CSS @-Rules
-
-#### `@media` — Media Queries (Sciter syntax)
-
-```css
-/* Comparison operators, no parentheses */
-@media width < 600px { body { font-size: 12pt; } }
-@media platform == "Windows" { body { font: system; } }
-
-/* Built-in variables */
-@media high-contrast { .card { background: white; color: black; } }
-
-/* Custom variables (set via JS) */
-@media viewport == "narrow" { div:nth-child(1n) { clear: after; } }
-```
-
-#### `@const` — Named Constants
-
-```css
-@const BRAND_COLOR: #3498db;
-@const SPACING: 8dip;
-
-button { background: @BRAND_COLOR; padding: @SPACING; }
-```
-
-#### `@mixin` — Reusable Style Blocks
-
-```css
-@mixin rounded(radius) {
-  border-radius: $radius;
-  overflow: hidden;
-}
-
-.card { @rounded(8dip); background: white; }
-```
-
-#### `@if` / `@else` — Compile-time Conditionals
-
-```css
-/* Like C preprocessor */
-@if platform == "Windows" {
-  body { font: system; }
-} @else {
-  body { font: 12pt "Helvetica Neue"; }
+  /* 1=header, 2=nav, 3=main, 4=aside */
 }
 ```
 
-#### `@image-map` — CSS Sprites
+### Flex Units (`*`)
 
-```css
-@image-map toolbar-icons {
-  src: url(toolbar.png);
-  cells: 4 2;
-  items: save, open, cut, copy, paste, undo, redo;
-}
+Flex units distribute **free space** (after fixed/content sizes).
 
-.save-btn { background-image: image-map(toolbar-icons, save); }
-```
+- `*` or `1*`: Equal share of space.
+- `2*`: Twice the share.
+- `0.5*`: Half share.
 
-Usage:
-```css
-.button.bold { background-image: image-map(toolbar-icons, bold); }
-```
+**Usage:**
+- `width/height`: `width: *`
+- `margin`: `margin: *` (centers element), `margin-right: *` (aligns left)
+- `padding`: `padding: *`
+- `border-spacing`: `border-spacing: *` (gap between children)
 
-#### `@set` — Style Sets (Scoped Styles)
+### Selectors
 
-Named style sets for component scoping:
+#### Shortcuts
+| Shortcut | Standard Equivalent |
+|----------|---------------------|
+| `E#id` | `E[id="id"]` |
+| `E.class` | `E[class="class"]` |
+| `E|type` | `E[type="type"]` (e.g., `input|text`) |
+| `E(name)` | `E[name="name"]` |
 
-```css
-@set card-styles {
-  :root { flow: vertical; padding: 8dip; }
-  .title { font-weight: bold; }
-}
+#### State Pseudo-classes
+Map to `element.state` properties.
 
-.card { style-set: card-styles; }
-```
+| Selector | Description |
+|----------|-------------|
+| `:active`, `:hover`, `:focus` | Standard interaction states |
+| `:checked` | Checked state (radio/checkbox) |
+| `:current` | Current item (select option/list item) |
+| `:expanded` / `:collapsed` | Tree node / Select option state |
+| `:empty` | No children OR empty input value |
+| `:invalid` / `:valid` | Input validation state |
+| `:busy` | Element is loading (frame/img) |
+| `:popup` | Is currently shown as popup |
+| `:owns-popup` | Has a popup shown |
+| `:owns-focus` | Contains the focus element |
+| `:tab-focus` | Received focus via Tab key |
+| `:ltr` / `:rtl` | Text direction |
+| `:window-root` | The root element of a window |
 
-Apply via CSS: `.card { style-set: card-styles; }`
-Apply via JS/JSX: `CSS.set()` function.
-
-### CSS Variables (`var()`)
-
-Sciter supports CSS variables but with **different syntax** than standard CSS:
-
-```css
-/* ✅ CORRECT: Sciter var syntax */
-:root {
-  var(primary-color): #3498db;
-  var(spacing): 8dip;
-}
-
-button {
-  background: var(primary-color);
-  padding: var(spacing);
-}
-
-/* ❌ WRONG: Standard CSS comma syntax not supported */
-:root {
-  --primary-color: #3498db, --spacing: 8dip;
-}
-```
-
-### Sciter-Specific CSS Properties
+### Sciter-Specific Properties
 
 | Property | Purpose | Example |
-|----------|---------|------|
-| `size` | Width/height shorthand | `size: 100dip 50dip` or `size: *` |
-| `border-shape` | Custom border shape | `border-shape: path(M 0 0 L10 10 Z)` |
-| `foreground-*` | Foreground image layer | `foreground: url(icon.svg)` |
-| `hit-margin` | Extend interactive area | `hit-margin: 4dip` |
-| `popup-position` | Default popup anchor | `popup-position: 7 1` (NUMPAD) |
-| `popup-animation` | Popup appearance effect | `popup-animation: blend 200ms` |
-| `context-menu` | Assign context menu | `context-menu: url(menu.htm)` |
-| `role` | ARIA-like role | `role: toolbar` |
-| `content-isolate` | Prevent style leakage | `content-isolate: isolate` |
-| `mapping` | RTL/bidirectional support | `mapping: rtl` |
-| `layer` | Force bitmap buffer | `layer: force` |
-| `clip-box` | Clip element to box | `clip-box: padding-box` |
+|----------|---------|---------|
+| **`behavior`** | Attach native controller | `behavior: button` |
+| **`prototype`** | Attach JS Class controller | `prototype: MyClass url(file.js)` |
+| **`aspect`** | Attach JS functional aspect | `aspect: MyAspect url(file.js)` |
+| `size` | Width & Height shorthand | `size: 100dip`, `size: *` |
+| `flow` | Layout manager | `flow: vertical` |
+| `foreground` | Foreground layer (image/color) | `foreground: url(icon.svg)` |
+| `hit-margin` | Extend click area | `hit-margin: 10dip` |
+| `border-shape` | Vector path border/mask | `border-shape: path(...)` |
+| `popup-position` | Popup anchor logic | `popup-position: 7 1` (NUMPAD) |
+| `content` | Replace content (any element) | `content: attr(value)` |
+| `context-menu` | Attach context menu | `context-menu: selector(#menu)` |
+| `cursor` | Custom cursor | `cursor: url(cursor.png) 10 10` |
+| `layer` | Bitmap caching | `layer: force` |
+| `content-isolate` | Style isolation | `content-isolate: isolate` |
 
-### State Selectors (CSS ↔ JS ↔ JSX)
+### At-Rules & Functions
 
-Sciter state pseudo-classes with JS/JSX counterparts:
-
-| CSS Selector | JS Access | JSX State | Notes |
-|-------------|-----------|-------|
-| `:active` | `el.state.active` | `state-active` | Mouse pressed |
-| `:hover` | `el.state.hover` | - | Mouse over (read-only) |
-| `:focus` | `el.state.focus` | - | Has focus |
-| `:checked` | `el.state.checked` | `:checked={true}` | Toggle state |
-| `:disabled` | `el.state.disabled` | `state-disabled` | Grayed out |
-| `:readonly` | `el.state.readonly` | `state-readonly` | Read-only |
-| `:expanded` | `el.state.expanded` | `:expanded={true}` | Expanded state |
-| `:collapsed` | `el.state.collapsed` | - | Opposite of :expanded |
-| `:invalid` | `el.state.invalid` | `state-invalid` | Validation failed |
-| `:empty` | `el.state.empty` | - | No content |
-| `:busy` | `el.state.busy` | `state-busy` | Loading |
-| `:current` | `el.state.current` | - | Current item in list |
-| `:selected` | `el.state.selected` | - | Selected item |
-| `:tab-focus` | `el.state.tabfocus` | Tab focus |
-| `:owns-focus` | `el.state.ownsfocus` | Has focused child |
-
-Additional read-only states: `:visible`, `:flow`, `:occluded`, `:popup`, `:owns-popup`, `:drag-over`, `:drag-source`, `:ltr`, `:rtl`, `:window-root`, `:blur-behind`, `:animating`.
-
-### Vector Images — `path()` and `icon()`
-
-Inline SVG paths in CSS for lightweight icons:
-
+#### `@media`
+Sciter uses JS-like syntax for media queries:
 ```css
-/* Inline path */
-.icon-arrow { background: path(M 10 5 L10 5 Z) 0 0 10 10; }
-
-/* Icon function */
-.expand { background-image: icon(right); }
-
-/* Stock icons */
-.close { background-image: icon(close); }
+@media width < 800px { ... }
+@media platform == "Windows" { ... }
+@media theme == "dark" { ... }
 ```
 
----
+#### `@const` & `@mixin`
+```css
+@const PRIMARY: #007bff;
+@mixin Box(w, h) { width: @w; height: @h; }
+
+div {
+  background: @PRIMARY;
+  @Box(100dip, 50dip);
+}
+```
+
+#### `@set` (Style Sets)
+Scoped style modules, essential for components and scrollbars.
+```css
+@set MyCardStyles {
+  :root { background: white; border: 1px solid #ccc; }
+  header { font-weight: bold; }
+}
+
+div.card { style-set: MyCardStyles; }
+```
+
+#### `@image-map`
+CSS sprites.
+```css
+@image-map icons {
+  src: url(sprites.png);
+  cells: 4 4; /* 4 cols, 4 rows */
+  items: edit, delete, open, save;
+}
+button.edit { background-image: image-map(icons, edit); }
+```
+
+#### `@if` / `@else`
+Load-time conditional logic.
+```css
+@if os == "Windows" { ... } @else { ... }
+```
+
+#### Functions
+- **`path(d-string)`**: Inline vector path.
+- **`icon(name)`**: Stock OS icon (e.g., `icon(warning)`).
+- **`var(name, default)`**: CSS variable (resolved from hierarchy).
+- **`attr(name)`**: Get attribute value (can be used in `content`).
+- **`color(name)`** / **`length(name)`**: Typed variable access.
+
+### Scrollbar Styling (via `@set`)
+
+Sciter scrollbars are styled by assigning a style set to `vertical-scrollbar` or `horizontal-scrollbar`.
+
+```css
+@set std-scrollbar {
+  .base { background: #eee; } /* track */
+  .slider { background: #aaa; border-radius: 4px; } /* thumb */
+  .slider:hover { background: #888; }
+  .prev, .next { display: none; } /* hide buttons */
+}
+
+/* Apply to all scrollable elements */
+* {
+  vertical-scrollbar: std-scrollbar;
+  horizontal-scrollbar: std-scrollbar;
+}
+```
+
+### Video & Lottie
+
+Sciter supports native video and Lottie playback via behaviors:
+
+- **Video**: `<video src="file.mp4" />` (requires platform codecs)
+- **Lottie**: `<lottie src="anim.json" />` (use `behavior: lottie`)
+
+Links: [Sciter CSS Map](https://sciter.com/docs/content/css/cssmap.html)
 
 ## JSX & Reactor
 
