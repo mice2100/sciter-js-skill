@@ -76,6 +76,30 @@ Use `<input|text>` with `filter` attribute for numeric input:
 - `filter="a~z A~Z"` — allow alphabetic characters
 - `filter="0~9 a~z"` — allow alphanumeric
 
+#### Placeholder Styling with `:empty`
+
+Use the `:empty` pseudo-class to style empty inputs (similar to placeholder effect):
+
+```css
+/* Faint color when input is empty */
+input:empty {
+  color: var(--color-text-faint);
+}
+
+/* Apply to specific input types */
+input|text:empty,
+input|search:empty {
+  color: #999;
+}
+
+/* Combine with other selectors */
+input:empty:not(:focus) {
+  font-style: italic;
+}
+```
+
+**Note**: Unlike the CSS `::placeholder` pseudo-element, `:empty` targets the actual input value when it's empty — the text color changes when user types.
+
 ---
 
 ## Development Modes
@@ -412,6 +436,41 @@ class MyComponent extends Element {
   }
 }
 ```
+
+### ⚠️ Component Export Rules
+
+**CRITICAL**: Element-derived components MUST be exported as ES6 modules for use in other files.
+
+```js
+// ✅ CORRECT: Export class for module reuse
+export class VideoControls extends Element {
+  render() { return <div>...</div>; }
+}
+
+// ❌ WRONG: Do NOT use registration functions
+function registerElement(name, cls) { ... }  // NEVER do this
+VideoControls.register("video-controls");      // NEVER do this
+window.customElements.define(...);             // NEVER do this
+```
+
+**Usage in other modules:**
+
+```js
+// Import and use the component
+import { VideoControls } from "./video-controls.js";
+
+class App extends Element {
+  render() {
+    return <VideoControls src="video.mp4" />;
+  }
+}
+```
+
+**Why ES6 exports?**
+- Sciter.js uses standard ES6 modules (`import`/`export`)
+- No custom registration system exists
+- Direct class references enable proper JSX compilation
+- Components can be tree-shaken and analyzed statically
 
 ### Component Lifecycle Order
 

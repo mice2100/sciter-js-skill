@@ -14,7 +14,8 @@ Sciter's Reactor allows you define components as classes or functions. Function 
 To define a Reactor component class, you need to extend `Element` DOM element class:
 
 ```js
-class Welcome extends Element {
+// ✅ CORRECT: Export for module reuse
+export class Welcome extends Element {
   name = "World";
   render() {
     return <h1>Hello, {this.name}</h1>;
@@ -22,8 +23,18 @@ class Welcome extends Element {
 }
 ```
 
+:::danger Important: ES6 Module Exports
+Element-derived classes MUST be exported using ES6 `export class` syntax:
+
+- **Use**: `export class MyComponent extends Element { ... }`
+- **Use**: `import { MyComponent } from "./component.js"`
+- **DO NOT use**: Registration functions like `registerElement()` or `window.customElements.define()`
+
+Sciter.js uses standard ES6 modules — no custom registration system exists.
+:::
+
 :::note
-Sciter's Reactor is different from ReactJS in this respect. In ReactJS React.Component is not associated directly with real DOM element, but in Reactor `this` in component methods, after mounting, refers to real DOM element. 
+Sciter's Reactor is different from ReactJS in this respect. In ReactJS React.Component is not associated directly with real DOM element, but in Reactor `this` in component methods, after mounting, refers to real DOM element.
 :::
 
 The only method you *must* define in class components is `render()`. All the other methods of a component are optional.

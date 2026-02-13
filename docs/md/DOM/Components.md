@@ -10,14 +10,26 @@ CSS assignable scripting behaviors - DOM element controllers.
 
 Sciter allows to define custom elements by using [prototype CSS property](../CSS/behaviors-and-aspects#class-controllers).
 
-The _prototype_ property expects custom class derived from built-in Element. 
+The _prototype_ property expects custom class derived from built-in Element.
+
 ```js
-class MyComponent extends Element {
+// ✅ CORRECT: Export for module reuse
+export class MyComponent extends Element {
   constructor() {}
   componentDidMount() {}
   componentWillUnmount() {}
 }
 ```
+
+:::danger Important: ES6 Module Exports
+Element-derived classes MUST be exported using ES6 `export class` syntax:
+
+- **Use**: `export class MyComponent extends Element { ... }`
+- **Use**: `import { MyComponent } from "./component.js"`
+- **DO NOT use**: Registration functions like `registerElement()` or `window.customElements.define()`
+
+Sciter.js uses standard ES6 modules — no custom registration system exists.
+:::
 
 ## Custom Class Components
 
