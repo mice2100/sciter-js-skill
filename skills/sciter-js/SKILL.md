@@ -20,7 +20,7 @@ Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTM
 | `flex: 1` / `flex-grow` | Flex units: `width: *`, `height: *` |
 | `gap` / `justify-content` | `border-spacing: *` or `margin: *` |
 | `@media (max-width: 600px)` | `@media width < 600px` (comparison operators) |
-| `var(--name)` | `var(name)` (no dashes required, no var() wrapper in decl) |
+| `var(--name)` | Declaration: `var(name): value;` — Usage: `var(name)` (no `--` prefix needed) |
 | `calc(100% - 10px)` | Supported, but **cannot** use `*` units inside `calc()` |
 | `::placeholder` | `:empty` (styles empty input value) |
 | `::-webkit-scrollbar` | Use `vertical-scrollbar: "style-set-name"` |
@@ -44,11 +44,11 @@ Professional Sciter.js 6.0 desktop application development. Sciter embeds an HTM
 
 | Feature | Sciter Syntax |
 |---------|--------------|
-| **Type shortcut** | `<input\|text>` = `<input type="text">` |
+| **Type shortcut** | `<input|text>` = `<input type="text">` |
 | **Name shortcut** | `<input(firstName)>` = `<input name="firstName">` |
 | **Class shortcut** | `<div.myclass>` = `<div class="myclass">` |
 | **ID shortcut** | `<div#myid>` = `<div id="myid">` |
-| **Multiple shortcuts** | `<button|radio(group).first> = `<button type="radio" name="group" class="first">` |
+| **Multiple shortcuts** | `<button|radio(group).first>` = `<button type="radio" name="group" class="first">` |
 | **Space after element** | Space is optional after element name (not before `=`), unlike HTML |
 | **Custom tags allowed** | `<toolbar>`, `<user-card>`, etc. with custom `style="display:block"` |
 | **Attribute events** | Not supported in static HTML; use JSX instead: `<button onclick={...}>` |
@@ -336,9 +336,9 @@ const el = <h1 id="hw">Hello, world!</h1>;
 // Combined shortcuts
 <button|radio(group).first>    /* type="radio" name="group" class="first" */
 
-// Self-closing required
-<img src="photo.png" />    /* ❌ WRONG */
-<img src="photo.png" />       /* ✅ CORRECT */
+// Self-closing is REQUIRED for void elements
+<img src="photo.png">      {/* ❌ WRONG: not closed */}
+<img src="photo.png" />     {/* ✅ CORRECT: self-closed */}
 ```
 
 ### Reactor Signals (Reactive State)
@@ -434,7 +434,7 @@ class App extends Element {
 
 **Update by self**: `componentUpdate({...})` → `render()` → `componentDidUpdate()`
 
-**Unmounting**: `componentWillUnmount()` → `componentWillUnmount()`
+**Unmounting**: `componentWillUnmount()`
 
 ---
 
@@ -903,7 +903,7 @@ Native DOM element controllers attached via CSS `behavior:name`.
 ### Buttons
 
 | Element | Behavior | Notes |
-|---------|----------|
+|---------|----------|-------|
 | `<button>` | `behavior:button` | Click handler, keyboard support |
 | `<input\|checkbox>` | `behavior:check` | `:checked` state, tristate |
 | `<input\|radio>` | `behavior:radio` | Radio group with same `name` |
@@ -914,24 +914,24 @@ Native DOM element controllers attached via CSS `behavior:name`.
 ### Editors
 
 | Element | Behavior | Key Features |
-|---------|----------|--------|
-| `<input\|text>` | `behavior:edit` | `el.edit.*` methods |
-| `<input\|password>` | `behavior:password` | Same as edit + `el.masked.*` |
-| `<input\|masked>` | `behavior:masked-edit` | Input mask: `#`=digit, `_`=any, `@`=alpha |
-| `<input\|integer>` | `behavior:integer` | — | `min`, `max`, `step` |
-| `<input\|decimal>` | `behavior:decimal` | — | Decimal input with precision |
-| `<input\|number>` | `behavior:number` | — | Numeric with up/down buttons |
-| `<textarea>` | `behavior:textarea` | — | Multi-line text |
-| `<plaintext>` | `behavior:plaintext` | Multi-line plaintext, syntax highlighting |
-| `<htmlarea>` | `behavior:htmlarea` | WYSIWYG HTML editor (full list below) |
+|---------|----------|-------|
+| `<input\|text>` | `behavior:edit` | `el.edit.*` methods, `filter`, `placeholder`/`:empty` |
+| `<input\|password>` | `behavior:password` | Same as edit (`el.edit.*`) + char masking |
+| `<input\|masked>` | `behavior:masked-edit` | `el.masked.*`, mask: `#`=digit, `_`=any, `@`=alpha |
+| `<input\|integer>` | `behavior:integer` | `min`, `max`, `step`, `placeholder`/`:empty` |
+| `<input\|decimal>` | `behavior:decimal` | Decimal input with precision |
+| `<input\|number>` | `behavior:number` | Numeric with up/down buttons |
+| `<textarea>` | `behavior:textarea` | `el.textarea.*`, multi-line text |
+| `<plaintext>` | `behavior:plaintext` | `el.plaintext.*`, code editor, load/save |
+| `<htmlarea>` | `behavior:htmlarea` | `el.htmlarea.*`, WYSIWYG HTML editor |
 
 ### Selects
 
 | Element | Behavior | Key Features |
-|---------|----------|--------|
-| `<select\|list>` | `behavior:select` | `el.select.*` | `multiple`, `multiple="checkmarks"` |
+|---------|----------|-------|
+| `<select>` | `behavior:select` | Single/multiple/checkmarks/tree variants |
 | `<select\|tree>` | `behavior:select` | Hierarchical `<option>` |
-| `<select>` / `<select\|dropdown>` | `behavior:select-dropdown` | `editable`, `showPopup()`, `hidePopup()` |
+| `<select\|dropdown>` | `behavior:select-dropdown` | `editable`, dropdown popup |
 
 ### Date/Time
 
@@ -944,43 +944,44 @@ Native DOM element controllers attached via CSS `behavior:name`.
 ### Containers
 
 | Element | Behavior | Key Features |
-|---------|----------|--------|
-| `<form>` | `behavior:form` | `el.form.*` | Compound value (JSON map) |
-| `<frame>` / `<iframe>` | `behavior:frame` | `el.frame.*` | `loadFile(url)`, `loadHtml(html, url)` |
-| `<frameset>` | `behavior:frame-set` | — | Resizable frame splitter |
-| `<details>` | `behavior:details` | — | Collapsible section |
+|---------|----------|-------|
+| `<form>` | `behavior:form` | `el.form.*`, compound value (JSON map) |
+| `<frame>` / `<iframe>` | `behavior:frame` | `el.frame.*`, `loadFile(url)`, `loadHtml(html, url)` |
+| `<frameset>` | `behavior:frame-set` | `el.frameset.*`, resizable pane splitter |
+| `<details>` | `behavior:details` | `:expanded`/`:collapsed` states |
 
 ### Outputs & Animation
 
 | Element | Behavior | Notes |
-|---------|----------|--------|
-| `<output>` | `behavior:output` | Formatted output, `format` attribute |
-| `<progress>` | `behavior:progress` | — | Progress bar |
+|---------|----------|-------|
+| `<output>` | `behavior:output` | Formatted output (`type`: text/integer/decimal/currency/date/time) |
+| `<progress>` | `behavior:progress` | Progress bar (indeterminate if no value) |
 | `<meter>` | `behavior:progress` | Static progress |
-| `<video>` | `behavior:video` | `el.video.*` | Video playback, `src` attribute |
-| `<lottie>` | `behavior:lottie` | `el.lottie.*` | Lottie animation |
+| `<video>` | `behavior:video` | `el.video.*`, playback control |
+| `<lottie>` | `behavior:lottie` | `el.lottie.*`, animation with keyPath props |
 
 ### Lists
 
 | Element | Behavior | Key Features |
-|---------|----------|--------|
-| Any element | `behavior:virtual-list` | `el.vlist.*` | Large datasets, `navigateTo()`, `advanceTo()` |
-| Any element | `behavior:expandable-list` | — | Collapsible list groups |
+|---------|----------|-------|
+| Any element | `behavior:virtual-list` | `el.vlist.*`, sliding window, `contentrequired` event |
+| Any element | `behavior:expandable-list` | Accordion, `:expanded`/`:collapsed` |
 
 ### Menus
 
 | Element | Behavior | Notes |
-|---------|----------|--------|
-| `<menu>` | `behavior:menu` | Context/popup menu |
-| `<menu.bar>` | `behavior:menu-bar` | Menu bar with dropdown submenus |
+|---------|----------|-------|
+| `<menu.popup>` | `behavior:menu` | Popup/context menu, `role="menu-item"` |
+| `<ul#menu-bar>` | `behavior:menu-bar` | Horizontal menu bar with dropdown submenus |
 
 ### Auxiliary
 
 | Element | Behavior | Notes |
-|---------|----------|--------|
-| `<scrollbar>` | `behavior:scrollbar` | Custom scrollbar |
-| `<terminal>` | `behavior:terminal` | ANSI terminal. `terminal.write()`, `terminal.resize()` |
-| `<details>` | `behavior:details` | — | Collapsible section |
+|---------|----------|-------|
+| `<widget\|vscrollbar>` | `behavior:scrollbar` | `el.scrollbar.*`, standalone scrollbar |
+| `<widget type="terminal">` | `behavior:terminal` | `el.terminal.*`, console emulation |
+| `<frame history>` | `behavior:history` | Back/forward navigation |
+| `<frame\|pager>` | `behavior:pager` | `el.pager.*`, print/preview |
 
 ---
 
@@ -1010,11 +1011,16 @@ Run: `scapp main.htm --debug`
 
 ---
 
-**Asset References**:
+**Asset References** (included with this skill):
 
-- **C++ Integration**: See **cpp-integration.md** for SOM_PASSPORT, custom behaviors, uimain()
-- **Behaviors**: Full behavior reference — see individual behavior files in docs/md/behaviors/
-- **Storage**: See `docs/md/storage/` for complete database API
+- **C++ Integration**: See [cpp-integration.md](./cpp-integration.md) for SOM_PASSPORT, custom behaviors, uimain()
+- **Behaviors**: Full behavior reference — see [behaviors-reference.md](./assets/behaviors-reference.md)
+- **CSS Reference**: Cheat sheet — see [css-reference.md](./assets/css-reference.md)
+- **Reactor Components**: See [reactor-component-reference.md](./assets/reactor-component-reference.md)
+- **Runtime API**: See [runtime-api-reference.md](./assets/runtime-api-reference.md)
+- **Graphics API**: See [graphics-api-reference.md](./assets/graphics-api-reference.md)
+- **Custom Painting**: See [component-painting-reference.md](./assets/component-painting-reference.md)
+- **SOM Patterns**: See [som-patterns.md](./assets/som-patterns.md)
 
 ---
 
@@ -1022,13 +1028,13 @@ Run: `scapp main.htm --debug`
 
 ### CSS vs Web Standard — Quick Lookup
 
-| ❌ Web Standard | ✅ Sciter |
-|----------------|-----|
+| Concept | ❌ Web Standard | ✅ Sciter |
+|---------|----------------|-----|
 | Layout | `display: flex` | `flow: horizontal`/`vertical` |
 | Grid | `display: grid` | `flow: grid(...)` |
 | Sizing | `flex-grow` | `width: *` / `width: 0.5*` |
 | Media | `@media (max-width: 600px)` | `@media width < 600px` |
-| Variables | `--custom: value` | `var(name):` + `attr(name):` |
+| Variables | `--custom: value` | `var(name): value` |
 
 ### Critical Sciter Rules
 
