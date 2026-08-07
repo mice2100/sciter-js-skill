@@ -73,6 +73,21 @@ const el = <div class={active ? "active" : ""}>...</div>;
 </button>
 ```
 
+### JSX Parsing Rules
+
+```js
+// JSX does NOT support "tail-less" HTML tags. Void elements MUST be
+// explicitly self-closed, unlike plain HTML:
+<img src="x.png" />     // OK
+<input type="text" />   // OK
+<br />                  // OK
+// <img src="x.png">    // INVALID — will not parse as JSX
+
+// JSX() itself can be redefined to plug in a different vnode format
+// (e.g. to drive a different renderer like Mithril's `m`):
+JSX = m;   // JSX literals now produce Mithril vnodes instead of [tag,props,kids] tuples
+```
+
 ---
 
 ## Function Components
@@ -356,6 +371,64 @@ setInterval(() => {
 
 ---
 
+## Reactor Top-Level API
+
+Functions for constructing and inspecting virtual DOM nodes (VNodes) directly, without JSX syntax.
+
+```js
+// JSX(type, [props], [...children]) : VNode  — what JSX literals compile to
+const vn = JSX("div", { id: "foo" }, ["bar"]);
+// equivalent to: <div id="foo">bar</div>
+
+// Reactor.cloneOf(velement, [props], [...children]) : VNode
+// Clones an existing VNode as a prototype:
+// - props (if given) are shallow-merged onto the original's props; original key= is preserved
+// - children (if given) fully REPLACE the original's children
+const base = <button class="btn">Save</button>;
+const disabled = Reactor.cloneOf(base, { disabled: true });
+
+// Reactor.isNode(object) : boolean — true if object is a JSX literal / VNode
+Reactor.isNode(<div />);          // true
+Reactor.isNode({});                // false
+
+// Reactor.tagOf(vnode) — returns the tag/component of a VNode
+Reactor.tagOf(<div />);            // "div"
+
+// Reactor.propsOf(vnode) : Object — returns props/attributes of a VNode
+Reactor.propsOf(<div id="foo" />).id;   // "foo"
+
+// Reactor.kidsOf(vnode) : Array — returns children array of a VNode
+Reactor.kidsOf(<div>bar</div>)[0];      // "bar"
+```
+
+**`content()`/`append()`/`prepend()` accept a single VNode or an array of VNodes:**
+```js
+container.content(<div>Hello</div>);              // single VNode
+container.content([1, 2, 3].map(n => <li>item #{n}</li>));  // array of VNodes
+```
+
+### DOM References
+
+Use the `var=` JSX attribute to capture a reference to the real DOM element created for that node. The value must be a valid assignment target (any expression left-hand-side works, e.g. `this.rows[12]`):
+
+```js
+class MyForm extends Element {
+  nameInput = Reactor.createRef();
+
+  render() {
+    return <form>
+      <label>Name</label>
+      <input|text(name) var={this.nameInput} />
+      <button onClick={() => this.nameInput.focus()}>focus</button>
+    </form>;
+  }
+}
+```
+
+`Reactor.createRef()` just returns a plain mutable holder object; `var={this.nameInput}` assigns the created DOM element to it once mounted. You can also assign directly into an array slot or any other expression, e.g. `var={this.rows[12]}`.
+
+---
+
 ## Lists and Keys
 
 ### Rendering Lists
@@ -544,6 +617,8 @@ document.body.patch(<MyComponent />);
 | Updates | `setState()` | `componentUpdate()` |
 | Virtual DOM | In JS library | Native implementation |
 | Bundle size | ~100KB | Zero (built-in) |
+| `shouldComponentUpdate()` | Return `false` to skip re-render | `element.state.reconciliation = false` |
+| `constructor()` timing | Closest to `componentWillMount()` | Called once, before element attached to DOM |
 
 ---
 
@@ -616,8 +691,10 @@ function Tab({ label, activeTab, current }) {
 
 ### Basic Signal
 
+`Reactor` is a global (like `Window`/`document`) per `docs/reactor/signals.md` — there is no importable `"reactor"`/`"@reactor"` module. Destructure off the global:
+
 ```js
-import { signal, computed, effect } from "@reactor";
+const { signal, computed, effect } = Reactor;
 
 const count = signal(0);
 const doubled = computed(() => count.value * 2);
@@ -650,26 +727,39 @@ class Counter extends Element {
 
 ## Internationalization (i18n)
 
-### Built-in i18n
+Sciter's JSX i18n is a **zero-runtime-cost**, compile-time mechanism: `@`-marked literals are looked up via translation hooks once, at script parse time, and the *translated* string is what ends up in bytecode. There is no `t()`-style runtime lookup function and no `~{...}~` interpolation syntax — translation hooks must be defined before the scripts that use `@` markers are loaded.
 
 ```js
-// Define translations
-const translations = {
-  en: { greeting: "Hello" },
-  zh: { greeting: "你好" },
-  ja: { greeting: "こんにちは" }
-};
+// Translatable string literal — @ prefix triggers JSX_translateText() at parse time
+const title = @"Meeting preferences";
 
-// Use in JSX
-function Greeting({ lang }) {
-  return <div>
-    ~{ translations[lang].greeting }~
-  </div>;
-}
+// Translatable attribute (@ prefix before the attribute name)
+<button @title="Meeting preferences">Show preferences</button>
 
-// At runtime
-Window.this.setLocale("zh");
+// Translatable element text (standalone @, or @name for an explicit translation ID)
+<button @>Show preferences</button>
+
+// Translatable text fragment inside larger content
+<caption><@>Hello</>, {userName}!</caption>
+
+// Dynamic/plural text — routed to JSX_translateNode() instead, since numeral
+// rules can't be handled by a static string table
+<span @>{n} bottles</span>
 ```
+
+```js
+JSX_translateText = function(text, context, type) {
+  // type: 0 = attribute, 1 = element text, 2 = string literal
+  return translationTable[text] ?? text;
+};
+JSX_translateNode = function(node, translationId) {
+  // node = ["tag", {attrs}, [children]] — must return a VNode (use JSX(...))
+  return JSX(node[0], node[1], [pluralize(translationId, n)]);
+};
+JSX_translateTags = { caption: true, label: true, button: true, span: true }; // auto-translate these tags without an @ marker
+```
+
+Full hook reference (`JSX_translationFileName`, `JSX_translationlineNo`, `JSX_translationContext`, hook-loading order, framed-app runtime language switching) is in SKILL.md's "JSX i18n" section.
 
 ---
 
