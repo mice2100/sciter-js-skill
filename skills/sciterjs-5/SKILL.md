@@ -27,10 +27,9 @@ scapp main.htm
 
 # With debug mode
 scapp main.htm --debug
-
-# Package as standalone
-scapp -p myapp main.htm
 ```
+
+Standalone packaging (bundling resources into a monolithic executable) is not a `scapp` CLI flag — it's done by the separate [Sciter.Quark](https://quark.sciter.com/) assembly tool, which appends your resources to `scapp.exe`.
 
 **Project structure (scapp mode):**
 ```
@@ -327,7 +326,7 @@ Window.post("app-event", data);
 
 ```cpp
 // Override in window class
-virtual bool on_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
+virtual bool handle_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
     if (params.cmd == SUBMIT) {
         // Handle form submission
     }
@@ -390,13 +389,27 @@ Window.this.on("trayicondoubleclick", (evt) => {
 
 ### FolderView Component
 
-Built-in file browser component for navigating directories:
+Sample-provided (not a Sciter built-in) file browser component for navigating directories — attached via CSS `prototype:`, not JS import, and used as `<folder>` (not `<folder-view>`):
+
+```css
+/* folder-view.css */
+@set folder-view {
+  :root { prototype: FolderView url(folder-view.js); }
+  /* ... */
+}
+/* this allows it to be used in HTML as <folder /> */
+folder { style-set: folder-view; }
+```
+
+```html
+<style>@import url(folder-view.css);</style>
+<folder filter="*.htm;*.html;*.png;*.jpg" />
+```
 
 ```js
-import * as FolderView from "@sys/fs/folder-view.js";
-
-// Usage in HTML:
-// <folder-view path="/path/to/folder" />
+document.on("file-activate", function(evt) {
+  console.log("file-activate", evt.data);
+});
 ```
 
 **Features:**
@@ -535,7 +548,9 @@ import * as sys from "@sys";
 
 // File operations
 await sys.fs.readFile("path.txt");     // -> ArrayBuffer
-await sys.fs.writeFile("path", data);
+const file = await sys.fs.open("path", "w");  // no sys.fs.writeFile() — open + File#write() instead
+await file.write(data);
+await file.close();
 await sys.fs.copyfile("src", "dst");
 await sys.fs.readdir("folder");        // -> [{name,type}]
 await sys.fs.stat("path");             // File info
@@ -544,8 +559,9 @@ await sys.fs.stat("path");             // File info
 const watch = sys.fs.watch("path", (path, events) => { });
 watch.close();
 
-// TCP socket
-const socket = new sys.Socket(sys.AF_INET, sys.SOCK_STREAM);
+// TCP socket (method calls below are documented; the constructor itself is unconfirmed
+// anywhere in docs/samples — no AF_INET/SOCK_STREAM constants exist in ground truth)
+const socket = new sys.Socket(/* constructor unconfirmed */);
 await socket.connect({ ip: "127.0.0.1", port: 8080 });
 await socket.write(data);
 const data = await socket.read();
@@ -584,7 +600,6 @@ env.path("desktop");     // Desktop folder
 env.path("documents");   // Documents folder
 env.path("downloads");   // Downloads folder
 env.path("appdata");     // App data folder
-env.drives();            // -> ["C:", "D:"] on Windows
 ```
 
 ### Module `@storage` (NEW in 5.0)
@@ -678,11 +693,12 @@ cancelAnimationFrame(animId);
 console.log("Basic log");
 console.log("Formatted: %s = %d", "answer", 42);
 
-// Custom exception handler (override default)
-console.reportException = function(err, isPromise) {
+// For a global exception handler, use @debug's setUnhandledExceptionHandler
+// (see "Module @debug" below) — no console.reportException override exists.
+import * as debug from "@debug";
+debug.setUnhandledExceptionHandler((err) => {
   Window.this.modal(<alert>{err.toString()}</alert>);
-  return "";
-};
+});
 
 console.warn("Warning message");
 console.error("Error message");
@@ -741,9 +757,9 @@ Sciter's 2D Graphics API for canvas, element painting, and offscreen rendering.
 ### Graphics Class
 
 ```js
-// Get graphics context
-const g = canvas.toPixels();
-// OR in element.paintContent(g => { ... })
+// Get graphics context (standard Web Canvas API)
+const g = canvas.getContext('2d');
+// OR inside a class component's paintContent(gfx) method
 
 // State
 g.save(); g.restore();
@@ -943,7 +959,7 @@ class AnimatedWidget extends Element {
 
 **Key paintContent patterns:**
 - Always call `this.requestPaint()` to schedule repaint
-- Use `this.box("dimension")` for element size
+- Use `this.box("client")` (or `"inner"`) for element size — returns a `Rect` with `width`/`height` properties. (Note: `"dimension"` is NOT a valid `element.box()` boxType — that value belongs to the separate `element.state.box(what, boxOf, ...)` method, which returns a `[width, height]` array instead.)
 - Use `gfx.save()` / `gfx.restore()` for transformations
 - Combine with Reactor for hybrid components
 
@@ -969,9 +985,6 @@ element.box(boxType[, relativeTo[, asPpx]]) : Rect
 | `"caret"` | Caret position (if any) |
 | `"icon"` | Position of foreground image |
 | `"scroll"` | Projection of client rect on content box |
-| `"dimension"` | `[width, height]` - just the size |
-| `"xywh"` | `[x, y, width, height]` - position and size |
-| `"rect"` | Same as `"xywh"` |
 
 **relativeTo** (second argument, optional) - coordinate system:
 
@@ -988,14 +1001,34 @@ element.box(boxType[, relativeTo[, asPpx]]) : Rect
 **asPpx** (third argument, optional) - if `true`, returns screen/physical pixels instead of CSS DIPs
 
 ```js
-// Get element size
-const [width, height] = this.box("dimension");
+// Get element size (Rect has x/y/width/height properties)
+const { width, height } = this.box("inner");
 
 // Get position relative to document
-const [x, y, w, h] = this.box("inner", "document");
+const { x, y, width, height } = this.box("inner", "document");
 
 // Get absolute screen position in physical pixels
 const rect = this.box("border", "screen", true);
+```
+
+### Element.state.box() - Array-shaped Metrics (Different Method!)
+
+`element.state.box()` is a **separate** method from `element.box()` above — different signature, different return shape. It's the one used throughout the real samples for quick tuple destructuring:
+
+```js
+element.state.box(what, boxOf[, relativeTo[, asPpx]]) : Array
+```
+
+- `what` (first argument) - shape of the returned array: `"xywh"` → `[x,y,w,h]`, `"rect"` → `[x0,y0,x1,y1]`, `"position"` → `[x,y]`, `"dimension"` → `[width,height]`, `"left"|"right"|"top"|"bottom"|"width"|"height"` → single number
+- `boxOf` (second argument, **required**) - same box vocabulary as `element.box()`'s `boxType`: `"inner"|"border"|"padding"|"margin"|"client"|"content"|"caret"|"icon"`
+- `relativeTo`, `asPpx` - same meaning as `element.box()`
+
+```js
+// Get element size as [width, height]
+const [width, height] = this.state.box("dimension", "inner");
+
+// Get [x, y, width, height]
+const [x, y, w, h] = this.state.box("xywh", "border", "window");
 ```
 
 ### Reactor (JSX) Components
@@ -1244,7 +1277,7 @@ class Gauge extends Element {
   }
 
   paintContent(gfx) {
-    const [w, h] = this.box("dimension");
+    const [w, h] = this.state.box("dimension", "inner");
     const barH = (this.value / 100) * h;
     gfx.fillStyle = Color.hsv((this.value / 100) * 120, 0.7, 0.9);
     gfx.fillRect(0, h - barH, w, barH);
@@ -1470,9 +1503,11 @@ Run: `scapp` (if named main.htm) or `scapp main.htm`
 ```bash
 # Enable inspector
 scapp main.htm --debug
+```
 
-# Or add to HTML
-<html window-debug="true">
+```html
+<!-- Inspector connection is allowed by default; explicitly opt OUT with: -->
+<html disable-debug>
 ```
 
 ---
@@ -1740,7 +1775,7 @@ Events: `"change"` (user input), `"statechange"`, `"bell"`
 ```html
 <lottie src="animation.json" autoplay loop></lottie>
 <lottie src="anim.json">
-  <param path="Layer Name" property="fillColor" value="#ff0000" />
+  <param path="Layer Name" prop="FillColor" value="#ff0000" />
 </lottie>
 ```
 
@@ -2040,7 +2075,7 @@ env.exec(...args)             // execute process (fire-and-forget)
 
 **Value:** `true/false` (check); `true/false` per element, form gets value of checked radio (radio)
 
-**Events:** `"change"` / `"input"` (state changed), `"press"` (synchronous)
+**Events:** `"change"` / `"input"` (state changed, both); `"press"` (synchronous, **check only**); `"click"` (asynchronous, **radio only**)
 
 ---
 
@@ -2773,7 +2808,7 @@ el.video.stop()
 <lottie src="animation.json" autoplay loop></lottie>
 <!-- Static parametrization: -->
 <lottie src="themed.json">
-  <param path="Background" property="FillColor" value="#1a1a2e" />
+  <param path="Background" prop="FillColor" value="#1a1a2e" />
   <param path="Icon **" property="StrokeColor" value="#e94560" />
 </lottie>
 ```
@@ -2848,10 +2883,11 @@ el.terminal.caretColumn    // int read-only
   window-blurbehind="auto"
   window-corners="default|not-round|round|round-small"
   window-state="shown|minimized|maximized|hidden|full-screen"
-  window-debug="true"
+  disable-debug
   lang="en"
 >
 ```
+`disable-debug` opts OUT of inspector connections (inspector is allowed by default; there is no `window-debug` attribute).
 
 ### `<include>` Element
 

@@ -172,7 +172,7 @@ class DrawWidget extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Clear background
     gfx.clearRect(0, 0, width, height);
@@ -204,7 +204,7 @@ class ProgressBar extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Background
     gfx.fillStyle = Color.rgb(0.9, 0.9, 0.9);
@@ -248,7 +248,7 @@ class Spinner extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Save state before transform
     gfx.save();
@@ -290,7 +290,7 @@ class GradientBox extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Create animated gradient
     const brush = Graphics.Brush.createLinearGradient(
@@ -329,7 +329,7 @@ class ParticleSystem extends Element {
   }
 
   animate() {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Update particles
     for (const p of this.particles) {
@@ -346,7 +346,7 @@ class ParticleSystem extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Clear with semi-transparent black for trails
     gfx.fillStyle = Color.rgb(0, 0, 0, 0.1);
@@ -372,15 +372,16 @@ class ParticleSystem extends Element {
 ```js
 class ClippedWidget extends Element {
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
-    // Clip to rounded rectangle
+    // Clip to a rectangle (Graphics.Path has no roundRect() — build a
+    // rounded shape with arcTo()/lineTo() if you need rounded corners)
     const clipPath = new Graphics.Path();
-    clipPath.roundRect(10, 10, width - 20, height - 20, 10);
+    clipPath.rect(10, 10, width - 20, height - 20);
 
     gfx.pushLayer(clipPath);
 
-    // Content is clipped to rounded rect
+    // Content is clipped to the rect
     for (let i = 0; i < 10; i++) {
       gfx.fillStyle = Color.hsv(i * 36, 0.7, 0.9);
       gfx.fillRect(10, i * 20, width - 20, 18);
@@ -511,7 +512,7 @@ class HybridComponent extends Element {
 
   // Custom painting for visualization
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
     const barHeight = (this.state.value / 100) * height;
 
     // Draw visual bar
@@ -536,7 +537,7 @@ class InteractiveCanvas extends Element {
   }
 
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Draw grid
     gfx.strokeStyle = Color.rgb(0.8, 0.8, 0.8);
@@ -572,7 +573,7 @@ class InteractiveCanvas extends Element {
 
 ### Performance
 
-1. **Use `refresh()` to schedule repaint** - don't call paint methods directly
+1. **Use `requestPaint()` to schedule repaint** - don't call paint methods directly
 2. **Pre-render static content** to offscreen images
 3. **Avoid creating new objects in paint loop** - reuse paths, brushes
 4. **Use `requestAnimationFrame` equivalent** - `this.timer(16, fn)` for ~60fps
@@ -582,7 +583,7 @@ class InteractiveCanvas extends Element {
 ```js
 class DebugWidget extends Element {
   paintContent(gfx) {
-    const { width, height } = this.box("dimension");
+    const { width, height } = this.box("inner");
 
     // Debug: draw box outline
     gfx.strokeStyle = Color.rgb(1, 0, 0);
@@ -604,7 +605,7 @@ class DebugWidget extends Element {
 | Direct property mutation: `this.val = 1` | Use `componentUpdate({ val: 1 })` |
 | Forgetting `super()` in constructor | Always call `super()` first |
 | Creating Graphics objects in loop | Create once, reuse |
-| Not calling `refresh()` after state change | Always `refresh()` to repaint |
+| Not calling `requestPaint()` after state change | Always `requestPaint()` to repaint |
 
 ## Custom Aspect Functions
 
@@ -623,7 +624,7 @@ chart.donut {
 Rules for the aspect function:
 
 - `this` is bound to the DOM element (already mounted — full `Element` API is available).
-- It is called exactly **once** in the element's lifetime (when the element mounts), not on every state change.
+- It appears to run once per matching rule when the element mounts (per `docs/md/css/behaviors-and-aspects.md`'s description of aspect invocation), but the docs don't explicitly state a "not on every state change" guarantee — unconfirmed, verify at runtime if your aspect depends on this.
 - It may receive parameters parsed from the CSS declaration, passed as a single object argument.
 - It may modify the element's content via explicit DOM methods or JSX.
 - It may attach event handlers to the element and its children.

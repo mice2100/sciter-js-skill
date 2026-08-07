@@ -5,9 +5,9 @@ Complete reference for Sciter's 2D Graphics API.
 ## Graphics Class
 
 The Graphics class represents a 2D drawing surface. Available in:
-- `<canvas>` element: `canvas.toPixels(g => {...})` or via `this.$("canvas").paintXXX()`
-- Element painting: `element.paintContent(g => {...})`
-- Image creation: `new Image(width, height, painter(g => {...}))`
+- `<canvas>` element: `canvas.getContext('2d')` (standard Web Canvas API)
+- Element painting: `element.paintContent = function(g) {...}` (immediate-mode painting)
+- Image creation: `new Graphics.Image(width, height, painter(g) {...})`
 
 ### Properties
 
@@ -191,8 +191,7 @@ const [h, s, l, a] = c.hsl;  // [25, 0.60, 0.38, 0.78]
 ### Color Methods
 
 ```js
-// String representation
-c.toString();           // "#804020"
+// String representation — `type` is documented as a required argument
 c.toString("RGB");      // "#804020"
 c.toString("RGBA");     // "#804020C8"
 c.toString("rgb");      // "rgb(128,64,32)"
@@ -340,7 +339,7 @@ if (img3) {
 const img4 = Graphics.Image.fromBytes(arrayBuffer);
 ```
 
-`Graphics.Image.load(url|request, sync)`: `sync` defaults to `false` (async, returns a Promise you must `await`); pass `true` for a synchronous load returning `Image | null` directly. Since it accepts a [Request](../JS.runtime/Fetch) object, an in-flight load can be cancelled the same way a `fetch()` request is cancelled (via `AbortController`).
+`Graphics.Image.load(url|request, sync)`: `sync` defaults to `false` (async, returns a Promise you must `await`); pass `true` for a synchronous load returning `Image | null` directly. Since it accepts a [Request](../JS.runtime/Fetch) object, an in-flight load can be cancelled via `request.abort()` (Sciter's `Request`/`Response` fetch API does not use `AbortController`).
 
 ### Image Properties
 
@@ -632,7 +631,7 @@ const union = Graphics.Rect(0,0,100,100) | Graphics.Rect(50,50,100,100); // Rect
 
 ```js
 const canvas = document.$("canvas");
-const g = canvas.toPixels();
+const g = canvas.getContext('2d');
 
 g.fillStyle = Color.rgb(0.2, 0.4, 0.8);
 g.fillRect(0, 0, canvas.width, canvas.height);
@@ -658,7 +657,7 @@ g.fillText("Hello Sciter!", 50, 50);
 const el = document.$("#painter");
 
 el.paintContent = function(g) {
-    const { width, height } = this.box("dimension");
+    const [width, height] = this.state.box("dimension", "inner");
 
     g.fillStyle = Color.rgb(0.2, 0.4, 0.8);
     g.fillRect(0, 0, width, height);

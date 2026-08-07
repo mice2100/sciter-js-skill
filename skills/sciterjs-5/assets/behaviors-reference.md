@@ -43,8 +43,8 @@ WYSIWYG HTML editing with full document container support.
 | `CTRL+I` | Italic |
 | `CTRL+U` | Underline |
 | `CTRL+D` | Code block `<code>` |
-| `CTRL+1-6` | Heading `<h1>`-`<h6>` |
-| `CTRL+0` | Paragraph `<p>` |
+| `CTRL+NUMPAD1...6` | Heading `<h1>`-`<h6>` |
+| `CTRL+NUMPAD0` | Paragraph `<p>` |
 | `CTRL+NUMPAD7` | Preformatted `<pre>` |
 | `CTRL+NUMPAD+` | Indent |
 | `CTRL+NUMPAD-` | Unindent |
@@ -260,7 +260,6 @@ Single-line text editing.
 | `edit.selectionEnd: int` | End of selection, or caret position if no selection |
 | `edit.selectionText: string` | Selected text, or `""` if none |
 | `edit.isStandalone: bool` | r/w. If `true`, navigational keys (ArrowLeft/Right) are always consumed even at content boundary |
-| `textLength` | Text length |
 
 ### Methods
 
@@ -999,23 +998,9 @@ Note: `vertical-align: bottom` CSS on the list makes it initially appear scrolle
 
 ### JavaScript
 
-```js
-const list = document.$("widget#list");
+There is no `list.items =` data-source property on the raw behavior — populate it entirely through the `"contentrequired"` event below. (Sample wrapper classes like `VirtualList`/`VirtualSelect` in `samples/samples.sciter/virtual-list/` add their own `items` convenience property on top of this, but that's app code, not part of the behavior itself.)
 
-// Set data source
-list.items = [
-    { id: 1, text: "Item 1" },
-    { id: 2, text: "Item 2" }
-];
-
-// Or with function
-list.items = function(anchor, direction) {
-    // Return items based on anchor
-    return [];
-};
-```
-
-### Native `"contentrequired"` event (lower-level API)
+### Native `"contentrequired"` event
 
 Fired when the behavior needs more elements due to scrolling:
 
@@ -1048,19 +1033,21 @@ el.vlist.scrollBy(pixels);    // animated scroll by N CSS pixels, returns bool (
 
 > **Caution — combining with Reactor/Signals:** the docs and samples never show `virtual-list` driven by a signal-based data source or rendered via JSX `render()`. Row rendering here is native (via `items`/`contentrequired`), not Reactor `patch()`-based, so per-row `:current`/selection state driven by a signal is NOT confirmed to work automatically — you likely need to manually sync selection state (e.g. via an `effect()` walking `list.children`) rather than relying on reactive re-render. Treat any virtual-list + Signals integration as unverified; test carefully.
 
-## behavior:popup
+## `<popup>` element (not a `behavior:X` CSS value)
 
-Applied to: `<popup>`
-
-Popup window/tooltip control.
-
-### HTML
+There is no documented `behavior:popup` CSS value — `docs/md/behaviors/README.md`'s behavior list does not include "popup", and no `docs/md/behaviors/behavior-popup.md` exists. `<popup>` is instead a native "out-of-canvas"/"airborn" element type (`docs/md/DOM/out-of-canvas-elements.md`), shown programmatically via `element.popup(popupEl, options)` — it doesn't render inline like a normal behavior-driven element.
 
 ```html
 <popup #tooltip>
   Tooltip content
 </popup>
 ```
+
+```js
+element.popup(Element.create(<popup.awatar>Content</popup>), { /* options */ });
+```
+
+Tooltips are `<popup role="tooltip">` elements, styleable via `popup[role="tooltip"] { ... }`.
 
 ## behavior:output
 
@@ -1270,9 +1257,11 @@ Print and print-preview functionality for a document.
 
 | Event | Description |
 |-------|-------------|
-| `"pagination-start"` | Pagination started |
-| `"pagination-end"` | Pagination finished |
-| `"pagination-page"` | Pagination of page `event.reason` complete |
+| `"pagination-start"` | Pagination started (per prose docs; but see caveat below) |
+| `"pagination-end"` | Pagination finished (per prose docs; but see caveat below) |
+| `"pagination-page"` | Pagination of page `event.reason` complete (per prose docs; but see caveat below) |
+
+> **⚠️ Discrepancy across ground-truth sources — verify at runtime before relying on this.** The prose docs give the hyphenated names above, but two independent real working samples (`samples/samples.sciter/printing/pager.js` and `samples/samples.sciter/applications.quark/mdview/printview/pager.js`) both listen for `"paginationready"` and `"paginationend"` instead — no hyphens, and "ready" not "start". A third source, the DOM event alias table (`docs/md/DOM/Event.md`), lists yet another variant pairing (`paginationstart`/`pagination-start`, `paginationend`/`pagination-ended`, `paginationpage`/`pagination-page`). For code you actually need to run, prefer the sample-confirmed `"paginationready"` / `"paginationend"`.
 
 ### Properties
 
@@ -1349,17 +1338,20 @@ N/A - no specific attributes.
 
 ### Methods
 
+Namespaced under `el.history.*` (confirmed via `samples/samples.sciter/applications.quark/mdview/main.js`):
+
 ```js
-el.back(): true|false;      // goes back, returns true if navigation succeeded
-el.forward(): true|false;   // goes forward, returns true if navigation succeeded
+el.history.back(): true|false;      // goes back, returns true if navigation succeeded
+el.history.forward(): true|false;   // goes forward, returns true if navigation succeeded
+el.history.go(n);                   // jump n steps (negative = back, positive = forward)
 ```
 
 ### Properties
 
 | Property | Description |
 |----------|-------------|
-| `length: integer` | Depth of history in the backward direction |
-| `forwardLength: integer` | Depth of history in the forward direction |
+| `el.history.length: integer` | Depth of history in the backward direction |
+| `el.history.forwardLength: integer` | Depth of history in the forward direction |
 
 ### Events
 
@@ -1609,7 +1601,7 @@ Set at design time via `<param path="..." property="..." value="..." />` inside 
 
 Applied to: `<input type="masked">`, `<input|masked>`, and to the `<caption>` sub-element of `<input|date>` and `<input|time>`.
 
-(Also referred to as `behavior:masked-text` / accessed via the `.masked.` interface.) Masked input editing - editable "islands" separated by static separator text.
+Accessed via the `.masked.` interface. Masked input editing - editable "islands" separated by static separator text. (No source confirms a `behavior:masked-text` alias — that name does not appear anywhere in docs/ or samples/.)
 
 ### Model
 
@@ -1786,7 +1778,7 @@ document.on("change", "form#some", function(evt, form) { var formValue = form.va
 | `<select type="dropdown">` | `select-dropdown` |
 | `<textarea>` | `textarea` |
 | `<menu>` | `menu` |
-| `<menu.popup>` | `popup` |
+| `<menu.popup>` | `menu` |
 | `<a>` | `hyperlink` |
 | `<video>` | `video` |
 | `<details>` | `details` |

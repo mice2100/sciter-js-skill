@@ -403,7 +403,7 @@ container (`css++inline-vector-images/path-expandable.htm`,
 * This also composes with the standard (non-`E`) `path()`/`icon()` functions and
   `border-shape: path(...)`, where flex-unit arithmetic like `(1* - 40)` can appear
   directly inside path coordinates to make a shape hug the container regardless of size
-  (`css++/border-shape-path.htm`):
+  (`css++inline-vector-images/border-shape-path.htm`):
   ```css
   border-shape: path(M 0 20 L 20 0 C 40 20 (1* - 40) 20 (1* - 20) 0 L 1* 20 ... Z);
   ```
@@ -443,8 +443,9 @@ background: linear-gradient(100% 100%, 80px 80px, red, blue);
 background: linear-gradient(25% 25%, 45deg, red, blue);              /* position + angle */
 background: linear-gradient(center center, 80px 80px, 45deg, red, blue); /* position + dims + angle */
 
-/* color stops can carry explicit offsets */
-background: linear-gradient(top, red, yellow 70%, green 75%, blue);
+/* color stops can carry explicit offsets — demonstrated in the samples for
+   radial-gradient (gradients/test-radial-gradient.htm), not linear-gradient: */
+background: radial-gradient(25% 25%, ellipse farthest-corner, red, yellow 70%, green 75%, blue, rgba(255,0,255,0.5));
 
 /* radial-gradient: (position, shape extent, color-stops...) */
 background: radial-gradient(25% 25%, ellipse farthest-corner, red, yellow, green, blue);

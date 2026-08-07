@@ -2,6 +2,8 @@
 
 Complete reference for Sciter Object Model (SOM) passport patterns and C++/JS bridging.
 
+> **⚠️ Verification caveat.** This repo's ground truth (`docs/md/`, `samples/`) is JS-focused and contains no C++ SDK header/reference material — a fact-check pass could only confirm the basic `SOM_PASSPORT_BEGIN_EX`/`SOM_FUNCS`/`SOM_FUNC`/`SOM_PROPS`/`SOM_RO_VIRTUAL_PROP`/`BEGIN_FUNCTION_MAP`/`FUNCTION_1`/`END_FUNCTION_MAP` macros directly (via real working code in `startup/src/mainWnd.h` and `assets/template/src/mainWnd.h`). Everything else below — `sciter::value` conversion helpers, async/Promise patterns, and asset-lifecycle methods — could not be checked against any source in this repo and should be verified against the actual Sciter C++ SDK headers before relying on exact names/signatures.
+
 ## SOM_PASSPORT Basics
 
 ### Basic Function Exposure
@@ -277,7 +279,7 @@ sciter::dom::element::root_element().post_event(
 Override event handlers in window or behavior class:
 
 ```cpp
-virtual bool on_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
+virtual bool handle_event(HELEMENT he, BEHAVIOR_EVENT_PARAMS& params) {
     switch (params.cmd) {
         case BUTTON_CLICK:
             // Handle button click

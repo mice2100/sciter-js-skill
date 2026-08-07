@@ -396,15 +396,11 @@ Some are runtime-only (read-only), others may also be set from JS.
 | `:current` | current element (e.g. option in select) | `state.current` |
 | `:disabled` | disabled | `state.disabled` |
 | `:read-only` | read-only (textarea/htmlarea) | `state.readonly` |
-| `:read-write` | editable | — |
 | `:expanded` / `:collapsed` | option/tree node state (mutually exclusive) | `state.expanded` / `state.collapsed` |
 | `:node` | expandable/collapsible node option in select\|tree | `state.node` |
 | `:incomplete` | img/frame content not yet arrived | `state.incomplete` |
 | `:busy` | img/frame loading | `state.busy` |
-| `:invalid` / `:valid` | input value validity | `state.invalid` |
-| `:missing` | required attribute/value missing | — |
-| `:in-range` / `:out-of-range` | value within/outside min/max | — |
-| `:required` / `:optional` | form field requiredness | — |
+| `:invalid` | input element has an invalid value | `state.invalid` |
 | `:animating` | has running transition/animation (incl. scroll) | `state.animating` |
 | `:popup` | shown as a popup right now | `state.popup` |
 | `:owns-popup` | has a popup shown via `E.popup(popupEl)` | `state.ownspopup` |
@@ -415,8 +411,8 @@ Some are runtime-only (read-only), others may also be set from JS.
 | `:theme(A)` | element or ancestor has `theme="A-B"` or `"B-A"` | — |
 | `:window-root` | is the window's root doc or a popup-owning element | — |
 | `:blur-behind` | `:window-root` using blur-behind background | — |
-| `:current` | currently focused element | — |
-| `:captive` | element inside a captive context | — |
+
+Not confirmed anywhere in docs/ or samples/ (dropped, previously listed here without support): `:read-write`, `:valid`, `:missing`, `:in-range`/`:out-of-range`, `:required`/`:optional`, a second/focus-related sense of `:current`, `:captive`.
 
 Setting state from JS:
 
@@ -670,7 +666,6 @@ elsewhere in the CSS reference.)
   * `none` — no overscroll at all
 * `overflow-y: scroll-indicator` (also valid for `overflow-x`) — shows a non-space-taking
   mobile-style scroll indicator instead of a classic scrollbar.
-* `body { scrollbar-virtual-mode: true; }` — enables mobile-style virtual scrolling.
 * Webkit-style pseudo-elements are also recognized for basic thumb/track theming:
   ```css
   ::-webkit-scrollbar { width: 10px; }

@@ -55,9 +55,9 @@ sciter.onGlobalEvent("custom-event", (data) => {
     console.log("Global event received:", data);
 });
 
-// Send global events from C++ or JS:
-// Window.send("custom-event", data);  // synchronous
-// Window.post("custom-event", data);  // asynchronous
+// Send global events from C++ or JS (both take an Event object, not a string+data pair):
+// Window.send(new Event("custom-event", { data }));  // synchronous
+// Window.post(new Event("custom-event", { data }));  // asynchronous
 ```
 
 ### DOM Query Functions
@@ -100,7 +100,7 @@ const sqlite = sciter.loadLibrary("sciter-sqlite");
 sciter.parseValue("true");      // true
 sciter.parseValue("1234n");     // BigInt 1234
 sciter.parseValue("0xFF");      // 255 (hex)
-sciter.parseValue("0d2021-12-01"); // Date
+sciter.parseValue("2021-12-01"); // Date (no prefix)
 sciter.parseValue("12px");      // Length object
 sciter.parseValue("1rad");      // Angle object
 sciter.parseValue("{foo: bar; baz: 1}"); // object (semicolon separator)
@@ -152,14 +152,20 @@ import * as sys from "@sys";
 ```js
 // Async (returns Promise)
 await sys.fs.readFile("path.txt");           // -> ArrayBuffer
-await sys.fs.writeFile("path.txt", data);
 await sys.fs.copyfile("src", "dst");
 await sys.fs.unlink("path.txt");             // Delete file
 await sys.fs.rename("old", "new");
 
 // Sync versions
 sys.fs.readFileSync("path.txt");
-sys.fs.writeFileSync("path.txt", data);
+```
+
+There is no documented `sys.fs.writeFile()`. Writing goes through `fs.open()` + the `File` instance's `write()` method instead (see below):
+
+```js
+const file = await sys.fs.open("path.txt", "w");
+await file.write(data);
+await file.close();
 ```
 
 > **Naming caution:** the `sciter.d.ts` type definitions shipped in the samples SDK declare sync variants with a **`$` prefix on the same function name** — `fs.$open`, `fs.$stat`, `fs.$lstat`, `fs.$mkdir`, `fs.$rmdir`, `fs.$readdir`, and `file.$read`/`file.$write`/`file.$close` on the `File` class — NOT `xxxSync()` or a `fs.sync.*` namespace. Treat `$`-prefixed names as the current, authoritative sync API; the `Sync`-suffix and `fs.sync.*` forms below are as documented in the prose docs but unconfirmed against `sciter.d.ts` — verify against your SDK build if a sync call fails.
@@ -270,8 +276,10 @@ sys.fs.S_IFIFO    // FIFO
 
 #### TCP Socket
 
+> **⚠️ Unverified constructor.** `docs/md/JS.runtime/module-sys.md` documents the TCP socket *instance* methods below, but never shows how to construct one — no `new sys.Socket(...)` call, and no `AF_INET`/`SOCK_STREAM` constants appear anywhere in docs/ or samples/. Only `new sys.Pipe()` has a documented/sample-confirmed constructor for `@sys` networking. Treat the constructor line below as unconfirmed; the method calls that follow ARE documented.
+
 ```js
-const socket = new sys.Socket(sys.AF_INET, sys.SOCK_STREAM);
+const socket = new sys.Socket(/* constructor unconfirmed */);
 
 await socket.connect({ ip: "127.0.0.1", port: 8080 });
 await socket.write(data);
@@ -287,8 +295,10 @@ socket.close();
 
 #### UDP Socket
 
+> **⚠️ Unverified constructor** — see note above; the methods below are documented, the constructor is not.
+
 ```js
-const socket = new sys.Socket(sys.AF_INET, sys.SOCK_DGRAM);
+const socket = new sys.Socket(/* constructor unconfirmed */);
 
 await socket.bind({ ip: "0.0.0.0", port: 8080 });
 await socket.send(data, { ip: "127.0.0.1", port: 8080 });
@@ -415,8 +425,6 @@ env.path("music");         // Music folder
 env.path("videos");        // Videos folder
 env.path("pictures");      // Pictures folder
 
-// Drives
-env.drives();         // -> ["C:", "D:"] on Windows
 
 // Environment variables
 env.variable("PATH");         // Get env var

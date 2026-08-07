@@ -222,7 +222,7 @@ document.body.on("mousedragrequest", function(evt) {
 document.body.on("mouseup", function(evt) { this.style.setCursor(null); });
 ```
 
-**Rendering a live element/frame subtree to a PNG file** — `new Graphics.Image(w, h, elementOrFrame)` (element itself as the "painter") + `.toBytes("png")` + `@sys` filesystem write, used identically for both a captured `<frame>` (whole embedded document) and a video snapshot:
+**Rendering a live element/frame subtree to a PNG file** — `new Graphics.Image(w, h, elementOrFrame)` (element itself as the "painter") + `.toBytes("png")` + `@sys` filesystem write, for a captured `<frame>` (whole embedded document). Video snapshots use a *different* technique — `videoEl.style.imageOf("foreground-image").toBytes("png")` — not the Image-constructor form:
 ```js
 import * as sys from "@sys";
 const [w,h] = frame.state.box("dimension");
@@ -293,7 +293,7 @@ writeln(xt.bold`back colors:`);
 writeln(xt.dim.bg_blue`BLUE`, "dim back color");
 writeln(xt.underline`underline`, "and", xt.strikethrough`strikethrough`);
 ```
-where `writeln` just does `terminal.write(args.join(" ") + "\r\n")`. Not a Sciter API itself, but a handy idiom to reuse when producing colored terminal output from script (data table: SGR code, colors object, styles object with `[on,off]` pairs, e.g. `red: [31, 39]`, `bold: [1, 22]`).
+where `writeln` just does `terminal.write(args.join(" ") + "\r\n")`. Not a Sciter API itself, but a handy idiom to reuse when producing colored terminal output from script (data table: SGR code, colors object, styles object with `[on,off]` pairs, e.g. `red: [31, 89]`, `bold: [1, 22]`).
 
 ## Syntax Highlighting (Tokenizer + `::highlight()`)
 

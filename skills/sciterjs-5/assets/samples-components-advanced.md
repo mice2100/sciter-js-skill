@@ -238,7 +238,8 @@ export function aspectWithParams(params) {         // this = element
   simple top-level attribute: `document.attributes.theme = "light" | "dark"`, matched
   by `html:theme(light) { background:#fff; }` / `html:theme(dark) { ... }`.
 - **Density/compact mode** via a plain attribute selector: `html[ui-size="compact"] { font-size:9pt; }`,
-  set with `document.attributes["ui-size"] = "compact"`.
+  set with `frame.frame.document.attributes["ui-size"] = "compact"` — note it's set on the
+  content **frame's inner document**, not the top-level `document`.
 - **A theme file is a self-contained token + style-set package.** `android-material/theme.css`
   defines a full color ramp with `var()` custom properties derived from the OS accent
   color via `morph()`, then overrides built-in style-sets (`@set std-button < std-button-base`)
@@ -371,8 +372,14 @@ multi-file app):
       data.window = {left:x, top:y, width:w, height:h};
     },
     restore(data) {
-      if (data.window) { Window.this.move(data.window.left, data.window.top);
-                          Window.this.move(data.window.left, data.window.top, data.window.width, data.window.height); }
+      if (data.window) {
+        const x = Math.max(data.window.left, 0);
+        const y = Math.max(data.window.top, 0);
+        const w = Math.max(data.window.width, 800);
+        const h = Math.max(data.window.height, 600);
+        Window.this.move(x, y);          // move to monitor
+        Window.this.move(x, y, w, h);    // replace on monitor
+      }
     },
   });
   // throttled auto-save on move/resize:
@@ -382,9 +389,10 @@ multi-file app):
   }
   Window.this.on("move", saveState).on("size", saveState);
   ```
-  `env.path("USER_APPDATA", APP_NAME)` (two-argument form) returns an app-specific
-  settings path — not otherwise documented (existing docs only show the single-arg
-  `env.path("appdata")`).
+  `env.path("USER_APPDATA", APP_NAME)` — the two-argument form itself IS documented
+  (`env.path(name, [relpath])` in `module-env.md`, `relpath` gets joined onto the folder
+  path); it's specifically the value `"USER_APPDATA"` (vs. the documented `"appdata"`)
+  that isn't confirmed elsewhere — double check that constant name before relying on it.
 - Module boundary convention in `mdview`: one `.js` module per concern (`settings.js`,
   `toc.js`, `pager.js` in `printview/`) imported by a thin `main.js` that wires DOM
   references (`document.$("frame#content")` etc.) to those modules — no framework,
@@ -441,8 +449,9 @@ built-in `showModal()`:
   });
   ```
 - **CSS**: backdrop effect is a `filter: blur(15px)` + dimmed `foreground-color` on
-  `body.dialog-shown`, dialog itself animates in via `opacity`/`transform` transitions
-  toggled by a `.shown` class added on the next event-loop tick (`dlg.post(() => dlg.classList.add("shown"))`).
+  `body.dialog-shown`, dialog itself animates in via an `opacity` transition only
+  (no `transform` in `lightbox-dialog/lightbox.css`) toggled by a `.shown` class
+  added on the next event-loop tick (`dlg.post(() => dlg.classList.add("shown"))`).
 
 ## Toast Notifications
 

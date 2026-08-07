@@ -643,15 +643,24 @@ const UserProfileWithLoading = withLoading(UserProfile);
 
 ### Render Props
 
-```js
-function DataProvider({ children, fetchData }) {
-  const [data, setData] = componentState(null);
+There is no `componentState()`/`useState()`-style hook in Reactor (confirmed: zero occurrences in docs/ or samples/) — function components are stateless by design, matching the framework's own React-comparison table ("Direct properties" instead of hooks). State and lifecycle only exist on class components extending `Element`. A render-props pattern needs a class component:
 
-  componentDidMount() {
-    fetchData().then(setData);
+```js
+class DataProvider extends Element {
+  data = null;
+
+  this(props, kids) {
+    super.this(props, kids);
+    this.props = props;   // this() must store props explicitly — not automatic
   }
 
-  return children(data);
+  componentDidMount() {
+    this.props.fetchData().then(data => this.componentUpdate({ data }));
+  }
+
+  render() {
+    return this.props.children(this.data);
+  }
 }
 
 // Usage

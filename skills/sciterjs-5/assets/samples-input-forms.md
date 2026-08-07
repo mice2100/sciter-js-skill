@@ -132,8 +132,18 @@ so the drag starts on the *next* event-loop tick (letting the triggering mousedo
 `.elementIndex` to detect direction, and swap DOM nodes live during the drag with an animated
 transform:
 ```js
-function swap(a,b){ b.parentElement.insertBefore(a,b); parentA.insertBefore(b, siblingA); }
+function swap(nodeA, nodeB) {
+  const parentA = nodeA.parentElement;
+  const siblingA = nodeA.nextSibling === nodeB ? nodeA : nodeA.nextSibling;
+  nodeB.parentElement.insertBefore(nodeA, nodeB);   // move nodeA to before nodeB
+  parentA.insertBefore(nodeB, siblingA);            // move nodeB to before nodeA's old sibling
+}
+
 function replaceElement(el, dir) {
+  let a, b;
+  if (dir) { a = el; b = el.nextElementSibling; }
+  else     { a = el.previousElementSibling; b = el; }
+
   a.style.set { transform: "translate(0,-100%)" };  // pre-position
   b.style.set { transform: "translate(0,100%)" };
   swap(a, b);
@@ -141,6 +151,7 @@ function replaceElement(el, dir) {
   a.style.set { transform: "translate(0,0)", transition: "transform 100ms linear" };
   b.style.set { transform: "translate(0,0)", transition: "transform 100ms linear" };
   a.once("transitionend", () => a.style.removeProperties());
+  b.once("transitionend", () => b.style.removeProperties());
 }
 ```
 Also handles **auto-scroll while dragging** by comparing `evt.contentPosition.y` against
