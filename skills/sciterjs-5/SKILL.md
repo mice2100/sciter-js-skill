@@ -146,6 +146,17 @@ public:
 
 ## CSS Constraints (Sciter vs Web)
 
+**Sciter implements CSS 2.1 in full, but CSS3 only for a specific, limited set of modules**
+(2D `transform`, `transition`/`animation`, most CSS3 selectors, `border-radius`,
+`box-shadow`, `opacity`, `rgba()`/`hsl()`, `@font-face`, `@media`, `var()`, `filter()`,
+`backdrop-filter()`, gradients). **Do not assume any other modern/CSS3+ feature works
+(Flexbox, Grid, `clip-path`, `mask`, `object-fit`, `aspect-ratio`, `:has()`,
+`:focus-within`, `gap`, `cubic-bezier()`, 3D transforms, container queries, CSS nesting,
+etc.) just because it isn't in the table below** — before using any CSS property/value/
+selector not covered in this file, check `assets/css-reference.md`'s "Compatibility
+Baseline" and "Value Enumerations for High-Risk Properties" sections, which enumerate what's
+actually confirmed vs. merely legacy/unconfirmed.
+
 ### PROHIBITED - Use Sciter Equivalents Instead
 
 | Web Standard | Sciter Equivalent |
@@ -1011,6 +1022,15 @@ const { x, y, width, height } = this.box("inner", "document");
 const rect = this.box("border", "screen", true);
 ```
 
+**Debugging gotcha:** `JSON.stringify(element.box(...))` prints `{}` — the returned
+`Rect`'s `x`/`y`/`width`/`height` aren't enumerable own properties, so `JSON.stringify`
+sees nothing even though `rect.width` etc. read back fine directly. If you're logging
+box metrics while debugging a layout issue (e.g. dumping them into an on-page `<pre>`
+since `console.log` doesn't reliably reach the terminal outside the Inspector — see
+`@debug` module notes), destructure the fields yourself
+(`` `${rect.x},${rect.y},${rect.width}x${rect.height}` ``) or use `element.state.box()`
+below instead, which returns a plain array that serializes correctly.
+
 ### Element.state.box() - Array-shaped Metrics (Different Method!)
 
 `element.state.box()` is a **separate** method from `element.box()` above — different signature, different return shape. It's the one used throughout the real samples for quick tuple destructuring:
@@ -1509,6 +1529,85 @@ scapp main.htm --debug
 <!-- Inspector connection is allowed by default; explicitly opt OUT with: -->
 <html disable-debug>
 ```
+
+**Verification gotchas learned the hard way (screenshot-driven debugging of a real app):**
+
+- **scapp does not hot-reload.** Editing `.htm`/`.css`/`.js` and re-screenshotting the
+  *same still-running* window shows stale output. Fully quit the process (not just the
+  window) and relaunch after every change you want to verify — `pkill -f scapp` (or
+  equivalent) then re-run, don't assume a visible window reflects the file on disk.
+- **A layout bug can be window-size-dependent even when it has no business being one.**
+  A fix that looks correct in a window you resized larger for convenience (more visible
+  slack space) can still be broken at the actual declared `window-width`/`window-height`
+  — cross-axis alignment bugs in particular (see the `flow:horizontal`/`vertical`
+  "common mistake" notes in `css-reference.md`) can be masked by extra room. Always do
+  the final verification pass at the real target window size, not a scaled-up debug
+  size.
+- **Don't trust eyeballing screenshots for a few-pixel centering question** — crop tight
+  and either measure the pixel gap programmatically (e.g. Python/PIL) or, better, read
+  the actual box metrics from the page itself (inject a temporary on-page debug `<pre>`
+  populated via `element.state.box(...)`, since `console.log` output isn't reliably
+  visible outside the Inspector — then remove the debug code once confirmed). Numbers
+  settle arguments that crops don't. **Caveat:** low-res/small crops can still fool you
+  even when you *are* cropping tight — see the sciter-mcp zoom note below.
+
+### Known Pitfalls (hard-won via sciter-mcp / real-app debugging)
+
+These cost significant back-and-forth to diagnose. Read before spending another round
+rediscovering them.
+
+- **`element.box("content", ...)` does NOT tell you whether content is visually
+  centered/aligned — do not use it to verify centering.** The "content" box reports the
+  extent of the scrollable content, not its final rendered/aligned position within the
+  padding box. Concretely: querying it for an `<input>` whose text was genuinely
+  top-aligned (not centered) returned `y: 0` relative to the padding box — looked like a
+  smoking gun. But querying the *same way* on a `<button>` that was visually confirmed
+  (via a tight zoomed screenshot) to be correctly centered returned the **identical**
+  `y: 0` / same gap numbers. The metric doesn't move when the real alignment does, so it
+  proves nothing either way. If you need to verify vertical/horizontal centering, either
+  (a) take a screenshot cropped tight to the element's **border** box (`element.box(
+  "border", "window", true)` for coordinates, fed into the snapshot tool's `region`, or
+  simpler, its `selector` param) with **zoom ≥ 3–4x** so a few-px offset is actually
+  visible — a 20–30px-tall control shown at native size is too small to judge by eye —
+  or (b) compare `box("inner", ...)` (the true padding box) against known content
+  dimensions, never `box("content", ...)` for this purpose.
+
+- **`line-height: height("100%")` — the dynamic self-referential centering trick used
+  internally by `sciter:master-base.css`/`sciter:ux-master.css` for buttons and
+  edit-behavior inputs — does not reliably take effect when re-declared from an author
+  stylesheet on an `<input>`.** Confirmed by setting it via `element.style` (max
+  specificity, should beat every stylesheet rule) and observing the computed line-height
+  stay at whatever was inherited instead. No error, no warning — it silently no-ops.
+  Don't fight it: use a literal pixel value equal to the element's own explicit `height`
+  (e.g. `height: 40px; line-height: 40px;`) instead. This is plain, standard, single-line
+  vertical-centering CSS and it works reliably where the Sciter-specific function didn't.
+
+- **A generic `button, input { font: inherit; ... }` reset silently breaks vertical
+  centering, because `font` is a shorthand that includes `line-height`.** Master
+  stylesheets often center single-line text by tying `line-height` to the box's own
+  height (see above). An innocuous-looking author reset that only *looks* like it's
+  touching font-family/color will also overwrite that line-height with whatever the
+  parent's plain inherited value is — and the mis-centering that results is often only
+  a handful of px, easy to miss without the zoomed-screenshot technique above.
+
+- **`padding-right` reserved for an overlaid icon does not reliably stay clear of text
+  in `behavior:edit` inputs.** When a value overflows and the edit behavior auto-scrolls
+  to keep the (possibly invisible/unfocused) caret in view, that scroll positioning is
+  computed against the full padding-box width, not the content-box width — so it ignores
+  the `padding-right` reservation and long values can visibly run under a
+  `position:absolute` icon overlaid via `right:`/`top:`. Don't rely on padding to keep an
+  overlay clear of edit-behavior text. Instead lay the icon out as an ordinary flow
+  sibling (e.g. wrap = `flow:horizontal` with border/background, input = borderless
+  `width:*` flex child, icon = fixed-width flow child after it) so overlap is
+  structurally impossible rather than merely reserved-against.
+
+- **`input.type = "..."` (JS property assignment) does not update the underlying `type`
+  content attribute**, so attribute-selector rules like `input[type="password"]` (which
+  is what actually attaches `behavior:password`/`behavior:edit` and drives masking) never
+  re-match — the input keeps rendering under its *old* type despite `el.type` reading
+  back the new value. Use `el.setAttribute("type", "text")` / `getAttribute("type")`
+  instead of the `.type` property when you need the visual/behavioral change to actually
+  take effect.
 
 ---
 
