@@ -4,6 +4,48 @@ Complete reference for Sciter-specific CSS syntax and constraints. Sciter's CSS 
 W3C CSS but its **layout engine, box model additions, selectors, units, and at-rules are its
 own**. Treat every assumption carried over from browser CSS as suspect until confirmed below.
 
+## Compatibility Baseline — Read This First
+
+Sciter's own docs state its CSS support level explicitly:
+
+> **CSS 2.1 is implemented in full. CSS 3 implementation is limited to selected modules** that
+> are practical for desktop UI: `transform` (**2D only**, no 3D/`matrix3d`/`perspective`),
+> `transition` and `animation`, most CSS3 selectors, `border-radius`, `box-shadow`, `opacity`,
+> `rgba()`/`hsl()` colors, `@font-face`, `@media`, `var()`, `filter()`, `backdrop-filter()`,
+> and CSS gradients. Everything else in CSS3/CSS4 (Flexbox, Grid, and most modern layout/
+> selector modules) is **not implemented** — Sciter provides its own alternatives instead
+> (`flow`/flex-units in place of `display:flex`/`display:grid`).
+
+**Ground rule for this document and for any code you generate:** a CSS property, value, or
+selector counts as supported only if it appears explicitly below, in `docs/md/css/`, or is
+seen actually used in `samples/`. **Do not assume a standard/modern CSS feature works just
+because it isn't listed as "prohibited."** Sciter's CSS surface is a curated subset, not
+"full CSS minus a blocklist" — silence in this doc means *unverified*, not *supported*.
+
+**Source confidence tags used below:**
+
+* **[confirmed]** — seen working in `samples/` and/or documented in `docs/md/css/` (Sciter.js-era sources).
+* **[legacy]** — documented only on the older desktop-Sciter "CSS support map"
+  (`sciter.com/docs/content/css/cssmap.html`, itself marked "incomplete") and **not**
+  corroborated anywhere in the Sciter.js docs or samples in this repo. Treat as *probably*
+  still true (same rendering core), but verify before depending on it — prefer the
+  `[confirmed]` alternative when one is listed.
+* **[not supported]** / **[not confirmed]** — explicitly contradicted by the docs, or a
+  standard/modern CSS feature actively searched for and not found anywhere in `docs/` or
+  `samples/`. Do not use.
+
+The following, in particular, were searched for across every `docs/` and `samples/` file
+and **found nowhere** — treat all of these as **not supported** unless you find independent
+proof:
+
+`clip-path`, `mask` / `mask-image`, `object-fit`, `object-position`, `aspect-ratio`
+(as an element CSS property — the *media-query* variable of the same name does exist, see
+Conditionals), `gap` (as a standalone property outside the Sciter `size`/`border-spacing`
+model), `:is()`, `:where()`, `:has()`, `:focus-within`, `:focus-visible`, `@container`,
+`@layer`, CSS nesting (`&`), `content-visibility`, `will-change`, `cubic-bezier()` timing
+function (Sciter uses named ease functions instead, see Transitions), and 3D transform
+functions (`rotate3d`, `translate3d`, `matrix3d`, `perspective`, `rotateX/Y/Z`).
+
 ## Sciter "Prohibited" Web Standards
 
 These Web CSS features do NOT work in Sciter - use Sciter equivalents:
@@ -89,6 +131,13 @@ p {
 **Flex units** — see [Flex Units](#flex-units) below: `N*` and `*` (shorthand for `1*`).
 Not usable inside `calc()`.
 
+`%%` **[legacy]** — "percent of free space" unit, documented on the old desktop-Sciter CSS
+map as equivalent to flex units (`1* == 100%%`), usable on `width`/`height`/`margin`/
+`padding`/`border-*-width`. **Not mentioned anywhere in the current Sciter.js docs**
+(`docs/md/css/units/dimentional.md` only documents `*`/`N*`). Prefer `*`/`N*` flex units —
+don't reach for `%%` unless you've confirmed it still parses in the Sciter.js build you're
+targeting.
+
 **calc()** is supported (standard semantics), except flex units cannot appear inside it.
 
 ### Angle and Duration Units
@@ -145,6 +194,65 @@ constant, or variable) using one or more transform arguments:
 div { background: morph(@BASECOLOR, lighten:25%); }
 ```
 
+**`tint(basecolor, deltaLightness [, deltaSaturation])`** **[confirmed]** — shorthand color
+transform, seen throughout `samples/samples.css/css++/`. Args are floats, not percentages:
+
+```css
+border: 4px solid tint(@THEME_COLOR, -0.25);        /* darken lightness by 0.25 */
+background: linear-gradient(top, tint(basecolor,+0.3), basecolor, tint(basecolor,-0.4));
+```
+
+---
+
+## Gradients **[confirmed]**
+
+Confirmed working via `samples/samples.css/gradients/*.htm`. `linear-gradient()` and
+`radial-gradient()` accept several positional-argument forms — unlike browser CSS, direction/
+position/size arguments come **before** the color-stop list, and can be mixed and matched:
+
+```css
+/* keyword direction */
+background: linear-gradient(top, @START, @END);
+background: linear-gradient(left, red, yellow, green, blue, magenta);
+background: linear-gradient(top left, @START, @END);          /* diagonal */
+
+/* angle */
+background: linear-gradient(45deg, @START, @END);
+
+/* position + angle (gradient line pinned to a start point) */
+background: linear-gradient(25% 25%, 45deg, @START, @END);
+
+/* two positions (start-point + end-point, both % or length) */
+background: linear-gradient(100% 100%, 80px 80px, @START, @END);
+
+/* position + explicit size + angle */
+background: linear-gradient(center center, 80px 80px, 45deg, @START, @END);
+
+/* color stops can carry offsets, like standard CSS */
+background: linear-gradient(45deg, red, yellow 70%, green 75%, blue);
+```
+
+```css
+/* radial-gradient(position, shape extent, color-stops...) */
+background: radial-gradient(25% 25%, ellipse farthest-corner, red, yellow, green, blue, rgba(255,0,255,0.5));
+background: radial-gradient(75% 75%, circle closest-side, white, orange, rgba(0,0,204,0.5));
+```
+
+Radial `shape` ∈ `circle` | `ellipse`; `extent` ∈ `closest-side` | `closest-corner` |
+`farthest-side` | `farthest-corner`.
+
+`background: linear-gradient(...)`/`radial-gradient(...)` are used through the normal
+`background`/`background-image` slot; `@const`-declared colors substitute directly as
+color-stop arguments.
+
+`repeating-linear-gradient()`, `repeating-radial-gradient()`, and `conic-gradient()`
+**[not confirmed]** — not found in any doc or sample; don't assume they work.
+
+**Legacy 4-corner gradient** **[legacy]** — `background-color` shorthand form from the old
+cssmap: `background-color: color-left-top, color-right-top, color-right-bottom, color-left-bottom;`
+("HTMLayout specific"). Prefer `linear-gradient()`/`radial-gradient()` — they're the
+confirmed, documented mechanism in Sciter.js.
+
 ---
 
 ## Flow Layout
@@ -184,6 +292,23 @@ child { width: *; /* equal widths, if desired */ }
 * `vertical-align` / `horizontal-align` on the *container* align children that aren't
   using flex units.
 
+**Common mistake — forgetting `vertical-align` on the container.** This is easy to get
+wrong because the *default* cross-axis behavior is inconsistent depending on the child:
+a child with no intrinsic size (e.g. a bare `<span>` of text, no padding) silently
+**stretches** to fill the row's full height even without `height:*` set explicitly; a
+child with its own intrinsic size (e.g. a padded `<button>`) does **not** stretch — it
+keeps its natural height and sits **top-aligned** in any leftover cross-axis space. In
+both cases nothing is centered unless the *container* explicitly sets
+`vertical-align: middle`. The visible symptom is identical either way and easy to
+misread as a text-alignment bug: content hugs one edge (usually the top) with dead
+space on the other side, even though the child's own box is internally sized/padded
+correctly. If you see that pattern, check the *parent* flow container's
+`vertical-align` first — don't start tuning padding/line-height/text-align on the child.
+`height: max-content` on the child is documented (see `samples-css.md`'s flexbox
+rosetta table) as a way to opt a stretched child out of stretching, back to its natural
+size — **this was not confirmed working** in practice (silently no-op in testing); don't
+rely on it. Setting `vertical-align` on the flow container is the reliable fix.
+
 ### flow:horizontal-wrap
 
 Like `horizontal`, but wraps into multiple rows when children don't fit.
@@ -198,6 +323,10 @@ Children laid out in a single column (closest analog to normal browser block flo
 * Top/bottom margins of adjacent children collapse.
 * `child { width: * }` spans the container's full width.
 * `child { height: * }` lets one child absorb remaining vertical space.
+* Same cross-axis rule as `flow:horizontal` above, just rotated: use `horizontal-align`
+  on the *container* to center/align children that don't fill the full width — it is
+  not automatic, and the "no intrinsic size stretches / has intrinsic size stays at the
+  start edge" split described above applies here too (start edge = left, not top).
 
 ### flow:vertical-wrap
 
@@ -476,7 +605,7 @@ on top.
 | Clip box | `clip-box`: `default`\|`content-box`\|`padding-box`\|`border-box`\|`margin-box`\|`hit-margin-box` |
 | Fills/strokes (SVG-style, apply to vector images on any element) | `fill`, `fill-opacity`, `fill-rule`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit`, `stroke-dasharray`, `stroke-dashoffset`, `stroke-opacity`, `stop-color`, `stop-opacity`, `marker`, `marker-start`, `marker-mid`, `marker-end` |
 | Flow layout | `flow`, `flow-rows`, `flow-columns` — see [Flow Layout](#flow-layout) |
-| Scrolling behavior | `scroll-manner`, `scroll-manner-x`, `scroll-manner-y` — value is `scroll-manner(prop:val, ...)` with `animation:true|false`, `step:<length>`, `page:<length>`, `wheel-step:<length>` |
+| Scrolling behavior | `scroll-manner`, `scroll-manner-x`, `scroll-manner-y` — value is `scroll-manner(prop:val, ...)` with `animation:true|false`, `step:<length>`, `page:<length>`, `wheel-step:<length>`. **[legacy]** finer-grained flags `page-animation:true\|false`, `step-animation:true\|false`, `home-animation:true\|false`, `wheel-animation:true\|false` also appear on the old cssmap (splitting the unified `animation` flag per trigger) — not corroborated in current Sciter.js docs, so prefer the unified `animation` flag unless you've confirmed the split flags still parse. |
 | Component binding | `behavior: <name>` (native behavior), `prototype` (class controller), `aspect` (functional controller) — see [Behaviors & Aspects](#behaviors--aspects) |
 | Foreground layer | `foreground`, `foreground-attachment`, `foreground-image`, `foreground-position(-top/-left/-right/-bottom)`, `foreground-repeat`, `foreground-size`, `foreground-width`, `foreground-height`, `foreground-clip`, `foreground-image-frame`, `foreground-image-cursor`, `foreground-blend-mode`, `foreground-color` (semi-transparent overlay drawn atop background+content) |
 | Role | `role` — e.g. `tr { role: "option" }` makes table rows selectable as `<select>` options |
@@ -487,6 +616,165 @@ on top.
 | RTL mapping | `mapping: left-to-right(part1, ..., partN)` where parts ∈ `margin`\|`border`\|`background`\|`background-image`\|`background-position`\|`foreground`\|`layout`\|`alignment` |
 | Popup position | `popup-position: <popup-reference-point> <anchor-reference-point>`, `popup-anchor-reference-point`, `popup-reference-point` — values: `top-left`, `top-center`, `top-right`, `middle-left`, `middle-center`, `middle-right`, `bottom-left`, `bottom-center`, `bottom-right` |
 | Popup animation | `popup-animation(type:blend\|inflate\|slide\|roll, axis:horizontal\|vertical, heading:start-to-end\|end-to-start, duration:100ms)` |
+
+### Value Enumerations for High-Risk Properties
+
+These properties exist in both browser CSS and Sciter CSS, which makes it easy to assume
+browser-standard values carry over. They don't always. Sciter's own value set for each is
+enumerated here — **values not listed were not found in any doc or sample and should not be
+assumed to work.**
+
+**`display`** **[legacy list, cross-checked against `display:table-cell` usage in
+`samples/samples.css/css++/`]** — confirmed keywords: `block`, `inline`, `inline-block`,
+`list-item`, `contents`, `table`, `inline-table`, `table-row`, `table-cell`, `table-body`.
+**`flex`, `inline-flex`, `grid`, `inline-grid`, `flow-root`, `table-caption`,
+`table-column(-group)`, `table-header/footer-group`, `run-in` — not supported/not
+confirmed.** Use `flow:` for flex/grid-equivalent layouts (see Flow Layout).
+
+**`visibility`** **[confirmed]** — `visible` (default) | `hidden` (takes space, invisible) |
+`none` (Sciter-specific, same as `display:none`) | `collapse`. Per
+`samples/samples.css/css++/visibility-none-article.htm`: *"collapse — the element is in the
+rendering tree, takes space, but its height or width is collapsed to zero... In Sciter this
+works for any element, but in standard CSS only for table rows."* — i.e. `visibility:collapse`
+is far more broadly usable in Sciter than in browsers (browsers effectively limit it to
+`<tr>`). Prefer `visible`/`collapse` toggling over `display` for dynamic show/hide, since it
+avoids having to remember each element's original non-`none` display value.
+
+**`overflow` / `overflow-x` / `overflow-y`** — shorthand form is
+`overflow-type [scroll-manner(...)]`. Values: `visible` (default) | `scroll` | `hidden` |
+`auto` | `hidden-scroll` **[confirmed — used in `docs/md/behaviors/README.md`]** (scrollbar
+hidden, content still scrollable) | `scroll-indicator` (mobile-style non-space-taking
+indicator) | `none` **[legacy]** (shortcut for `overflow:visible; min-width:min-content;
+min-height:min-content;`).
+
+**`cursor`** **[legacy list; the subset `default`/`pointer`/`text`/`move`/`se-resize` is
+confirmed in samples]** — `auto` | `crosshair` | `default` | `pointer` | `move` |
+`{n,ne,e,se,s,sw,w,nw}-resize` | `text` | `wait` | `help` | `drag-copy` | `drag-move` | a
+`url(...)` to a `.cur`/`.ani` file. **Modern browser cursor keywords — `grab`, `grabbing`,
+`zoom-in`, `zoom-out`, `not-allowed`, `context-menu`, `col-resize`, `row-resize`, `alias`,
+`copy`, `cell`, `all-scroll`, `progress`, `no-drop`, `vertical-text` — are not confirmed.**
+(`foreground-image-cursor` additionally lists `progress` and `no-drop` in its own value set
+on the legacy map — that's a different property from `cursor`, don't conflate the two.)
+
+**`border-radius`** — standard 1–4 value / `/`-elliptical syntax, **but** **[legacy]**:
+*"with non-zero border radius, colors of all borders shall be the same"* — don't design a
+rounded element with different colors per side; they'll collapse to one.
+
+**`min-width` / `max-width`** — `auto` is a valid value on both, but its *default* meaning
+is Sciter-specific and non-standard **[legacy]**: `min-width:auto` defaults to the element's
+own intrinsic min width for **all** elements (mimics old IE, not the CSS spec default of
+`0`); `max-width:auto` is the default specifically on `<table>` (models "size to content"
+table sizing). Don't assume `min-width`/`max-width` start at CSS-spec defaults.
+
+**`letter-spacing`** **[legacy — flagged "N/A" on the classic cssmap, uncorroborated
+elsewhere]**. Treat as having no confirmed effect until you've tested it in your target
+build; don't rely on it for spacing.
+
+**Unitless `line-height` on small single-line text (pills/badges/chips/tags)** — a
+real, repeatedly-observed bug, not a design nitpick: a unitless `line-height` (e.g. the
+common `body { line-height: 1.6 }` for paragraph readability, inherited into everything)
+makes text render visibly **above center** inside a symmetrically-padded single-line
+container — the "extra" leading isn't split evenly above/below the glyph the way the CSS
+spec describes, it shows up mostly *below*. It's easy to misdiagnose this as a
+flow/alignment bug (it looks identical to one) and waste time on `vertical-align` /
+`flow` fixes that do nothing, because the real cause is upstream: the inherited
+`line-height` multiplier. Fix: give any small padded text badge (status pills, tags,
+chips, segmented-control buttons, etc.) its own explicit `line-height` — `1` or `1em` —
+instead of letting it inherit the page's prose line-height. Diagnose it directly rather
+than guessing: read `element.state.box("dimension","inner")` before/after the change —
+if the box's own height shrinks by roughly `(inherited-multiplier − 1) × font-size` and
+the glyph now sits centered, that confirms line-height was the cause. (Separately:
+`getComputedStyle(el).lineHeight` for an unresolved unitless value can report a bogus
+huge number in some builds — e.g. it printed `820`/`1312` matching the *window height*,
+not the font-size. Don't trust that specific read-back; measure the rendered box instead.)
+
+**`background-repeat` / `foreground-repeat`** **[legacy]** — beyond the standard `repeat` |
+`no-repeat` | `repeat-x` | `repeat-y`, Sciter adds `expand` (expandable-9-slice-style
+filling, paired with the `background-offset-*`/`foreground-position-*` margins already
+documented above) and `stretch [keep-ratio]` (stretch to fill, optionally preserving aspect
+ratio — position the result with `background-position`).
+
+---
+
+### Gradients, Filters, Transforms — Confirmed Function Sets
+
+**`filter` / `backdrop-filter`** **[confirmed — `samples/samples.css/css3-filter/`]**:
+`blur(<length>)`, `brightness(<percent>)`, `contrast(<percent>)`, `grayscale(<percent>)`,
+`hue-rotate(<deg>)`, `invert()`, `opacity(<percent>)`, `saturate(<percent>)`,
+`sepia(<percent>)`, `drop-shadow(<offset-x> <offset-y> <blur> <color>)`. This matches the
+standard CSS Filter Effects function set closely — no surprises here, but note the SVG
+`url(#filter)` reference form is not confirmed.
+
+**`transform`** **[confirmed 2D subset]** — per the official compatibility statement,
+**transform is 2D only**. Confirmed functions from samples: `rotate(<deg>)`,
+`scale(<n>)` / `scale(<x>,<y>)`, `translate(<x>,<y>)`. `skew()`/`skewX()`/`skewY()` and
+`matrix()` are standard 2D CSS functions not found in any sample here — treat as
+**not confirmed**, not as safely assumed. **`rotate3d()`, `translate3d()`, `matrix3d()`,
+`perspective()`, `rotateX/Y/Z()` are explicitly out of scope** ("2D only") even though a
+bundled third-party stylesheet (`samples/samples.css/css-fontawesome/`) contains `rotate3d()`
+calls — that file is a straight port of the real Font Awesome web CSS and its 3D-transform
+keyframes are not guaranteed to render correctly under Sciter's 2D-only transform engine.
+
+---
+
+## Transitions & Animations
+
+### `transition` — two accepted syntaxes **[confirmed]**
+
+**Standard-CSS-like shorthand** — `property [ease-name] duration`, seen throughout
+`samples/samples.css/gradients/`:
+
+```css
+div { transition: transform 0.5s; }                    /* property + duration, default ease */
+div { transition: background linear 0.5s; }             /* property + ease-name + duration */
+div { transition: transform quart-out 0.5s; }
+```
+
+**Function-call-per-property form** (pre-dates the W3C shorthand, per Sciter's own docs —
+*"transition was implemented in H-SMILE core long before it was specified by W3C so there are
+differences in notation"*):
+
+```css
+.mybutton:hover {
+  transition: color(linear,200ms) border-color(linear,100ms);
+}
+```
+
+Multiple properties: space-separate multiple `property(...)` terms, or (shorthand form)
+comma-separate multiple `property duration` terms.
+
+**Ease-function names** — Sciter uses **named ease functions, not `cubic-bezier()`**
+(`cubic-bezier()` is not confirmed anywhere in docs/samples — don't use it):
+
+```
+none  linear
+quad-in    quad-out    quad-in-out
+cubic-in   cubic-out   cubic-in-out
+quart-in   quart-out   quart-in-out
+quint-in   quint-out   quint-in-out
+sine-in    sine-out    sine-in-out
+expo-in    expo-out    expo-in-out
+circ-in    circ-out    circ-in-out
+elastic-in elastic-out elastic-in-out
+back-in    back-out    back-in-out
+x-back-in  x-back-out  x-back-in-out
+xx-back-in xx-back-out xx-back-in-out
+bounce-in  bounce-out  bounce-in-out
+```
+
+### `@keyframes` + `animation` **[confirmed — `samples/samples.sciter/themes/windows-flat/theme.css`]**
+
+Standard `@keyframes` syntax and `animation` shorthand both work:
+
+```css
+@keyframes flat-progress-slide {
+  from { background-position-left: 0%; }
+  to   { background-position-left: 100%; }
+}
+.progress { animation: 1.2s infinite alternate flat-progress-slide; }
+```
+
+Remember the 2D-only `transform` restriction applies inside keyframes too.
 
 ---
 
@@ -859,6 +1147,20 @@ div {
 }
 ```
 
+### Custom (Dash-Prefixed) Properties — a *different* mechanism **[legacy]**
+
+Don't confuse this with `--name`/`var()` above. Any property name starting with a single
+`-` is treated as a **custom, non-inherited** attribute-like slot, independent of the
+variable system:
+
+```css
+p { border: 1px solid red; -custom: "value"; }
+```
+
+Value can be a quoted string, an nmtoken, a number, a `url(...)`, or `selector(...)`. Unlike
+`--name`/`var()` custom properties, these do **not** inherit parent→child and are not looked
+up via `var()`/`color()`/`length()`.
+
 ### CSS Attributes (`attr()`)
 
 **Declaration form** — sets a *default DOM attribute value* for matching elements,
@@ -1038,6 +1340,28 @@ Semantically equivalent to C/C++ preprocessor `#if`/`#else`/`#endif`.
 **Rule of thumb**: use `@if` for conditions that never change at runtime (e.g.
 `platform`, `desktop`); use `@media` for conditions that can change while the app is
 running (e.g. `high-contrast`, custom app-defined media vars).
+
+### `@import` **[confirmed — `samples/samples.css/css-fontawesome/main.htm`]**
+
+Standard CSS stylesheet inclusion:
+
+```css
+@import url(fontawesome/fontawesome.css);
+```
+
+### `@font-face` **[confirmed — listed in the official CSS3 module list, used in bundled font CSS]**
+
+Standard embedded/custom font declaration syntax works as in browser CSS.
+
+### `@include` **[legacy — not confirmed for Sciter.js]**
+
+Documented only on the old cssmap as a way to pull a *script* (not a stylesheet) into the
+document from CSS: `@include "mime-type" url(...) [media-types];`, e.g.
+`@include "text/tiscript" url(script.tis) screen;` (equivalent of
+`<script type="text/tiscript" src="script.tis">`). This predates Sciter.js's ES-module
+system (`<script type="module">`, `import`) — don't reach for `@include` in Sciter.js code;
+use ES module imports instead. Listed here only so it's recognized if encountered in ported
+legacy-Sciter code, not as something to write new.
 
 ---
 

@@ -623,6 +623,18 @@ or by setting the child's own cross-axis size to `*` (stretch) vs `max-content`
 (shrink-to-fit, i.e. "flex-start"-like). This margin-based technique is the general
 Sciter idiom for anything browsers do with `align-items`/`justify-content`.
 
+**Caveat from real-world testing:** the `height:max-content` half of that row (opting a
+child out of default stretch, back to its natural size) did **not** work in practice —
+set on a `flow:horizontal` child it was silently ignored, the child still stretched.
+Don't rely on it. For simple "center this row of children" cases, skip the margin-*
+technique too and reach for `vertical-align: middle` (or `horizontal-align: center` in
+`flow:vertical`) directly on the **container** instead — see `css-reference.md`'s
+`flow:horizontal`/`flow:vertical` sections. That was confirmed working, is one property
+instead of two, and doesn't depend on the stretch/max-content behavior at all. Reserve
+the margin-`*` trick for cases that specifically need *asymmetric* alignment (e.g. one
+child pinned top, another centered) that a single `vertical-align` on the container
+can't express.
+
 The doc's own caveat: `display:flex` "breaks existing CSS box model" so browser vs
 Sciter child dimensions may not match pixel-for-pixel even with equivalent rules —
 useful expectation-setting when porting flexbox layouts.

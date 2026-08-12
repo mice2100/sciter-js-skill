@@ -1609,6 +1609,57 @@ rediscovering them.
   instead of the `.type` property when you need the visual/behavioral change to actually
   take effect.
 
+- **Plain text inside a native `<summary>` (the clickable row of `<details>`) can split
+  into two different baselines within a single, unbroken text node — with nothing
+  actually wrapping.** Repro: `<details><summary>2026-08-10 · 05:08</summary></details>`
+  renders the part after " · " a few px higher than the date part, even though it's one
+  `<span>`, one font-size, one line, no line-break. Minimal-case testing showed it's tied
+  specifically to `<summary>`'s native disclosure behavior (`style-set: std-details`) —
+  the identical markup/classes appended to a plain `<div>` (not inside `<details>`)
+  rendered perfectly aligned; wrapping it back in `<summary>` reproduced the split every
+  time, regardless of `word-break`/`white-space`/`font-family` (all three were tried and
+  changed nothing). **Fix:** give the text run `display: inline-block` — that forces
+  Sciter to lay it out as one atomic box instead of letting `<summary>`'s internal
+  text-flow fragment and re-baseline it. Suspect anywhere short mixed digit/punctuation
+  metadata (timestamps, durations, counters) sits directly inside a `<summary>` row.
+
+- **`zoom` on `sciter_take_snapshot` (sciter-mcp) is pixel-upscaling of the already-
+  captured bitmap, not a higher-fidelity re-render — past ~2–3x it visibly blurs, and
+  that blur can hide a real few-px misalignment as easily as it can fake one.** This
+  produced two false "confirmed fixed" conclusions in the same debugging session before
+  the actual bug (see `<summary>` baseline-split above) was found: a 6x-zoom crop looked
+  visually aligned both before *and* after an unrelated CSS change, because the
+  interpolation smeared the boundary either way. **For anything sub-pixel — baseline
+  alignment, few-px centering — don't trust zoomed screenshots by eye at all.** Instead:
+  take the screenshot at zoom ≤ 2, composite it onto an opaque background (Sciter PNGs
+  can carry alpha; `Image.new("RGB", size, white).paste(im, mask=im.split()[3])` in
+  PIL — skipping this step and averaging raw RGBA gives nonsense stats), threshold to a
+  text mask (`grayscale < ~220`), segment into per-character column blobs (runs of
+  columns where the mask is `.any(axis=0)`), and compare each blob's own top/bottom row —
+  not one wide window spanning multiple characters, which averages small offsets away
+  and can hide exactly the bug you're checking for. Coordinates for a `region` crop or for
+  choosing which `selector` to shoot: physical/"screen"-quality `element.state.box(...)`
+  numbers already match a zoom=1 screenshot's raw pixels 1:1 (Retina scale is baked into
+  both), so `image_xy = (screen_xy - element_top_left_screen_xy) * zoom`.
+
+- **When isolating a layout bug with a minimal reproduction (e.g. appending a synthetic
+  element straight to `sandDoc.body` via `sciter_eval_script`), measure the isolated
+  repro with the exact same rigor as the real bug — don't downgrade to a coarser check
+  for the "control" case.** A coarse wide-window measurement on an isolated
+  `<details><summary>` repro read as "aligned, bug didn't reproduce" and wrongly ruled
+  out `<summary>` as the cause; re-measuring the *same* repro with per-character blobs
+  showed the identical offset as the real page. The bug was real and reproducible the
+  whole time — only the measurement was too coarse to see it.
+
+- **`sciter_eval_script` (sciter-mcp) `import` paths resolve relative to the MCP
+  container's own resource directory, not the loaded page's location.** Importing a
+  project module by relative path (`import * as storageApi from "./js/storage.js"`)
+  fails with `Unknown module ...res/js/storage.js`; use an absolute `file:///` URL to the
+  real project path instead. Also, exporting a plain string or a nested object from the
+  eval'd module sometimes silently disappears from the returned `result` (no error,
+  just missing key) — if a value goes missing, re-shape the export into flat
+  primitive-valued keys rather than assuming the call failed.
+
 ---
 
 ## URL Schemes
