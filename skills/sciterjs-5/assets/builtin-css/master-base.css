@@ -1,0 +1,1824 @@
+/*base classes, common to all themes*/
+
+/*html { font:system; } - not good, this will set font-rendering-mode:snap-pixel too */ 
+
+@media print {
+  html {
+    background-color: transparent;
+    overflow:hidden;
+  }
+  body {
+    margin:0;
+  }
+}
+
+form { behavior:form; }
+
+/* hyperlinks */
+a { behavior:hyperlink; }
+a:link { text-decoration:underline; color:blue; cursor:pointer; behavior:hyperlink; }
+a:link:focus { text-decoration:underline; }
+a:link:hover { color:red; }
+a:link:active { text-decoration:none; }
+a:link:tab-focus { outline-width:1px; outline-offset:0px; outline-style:dotted; }
+
+br::before {
+    display:inline-block;
+    content:"";
+}
+
+br::after {
+    display:inline-block;
+    content:"";
+}
+
+video { foreground-repeat: no-repeat; foreground-position: 50% 50%; }
+video[sizing=cover] { foreground-size: cover; }
+video[sizing=contain] { foreground-size: contain; }
+
+lottie 
+{
+  behavior: lottie;
+  display:block;
+  size:auto;
+  foreground-position: 50% 50%;
+  foreground-repeat:no-repeat;
+  foreground-size:contain;  
+}
+
+svg:incomplete:not(:busy),
+img:incomplete:not(:busy)   
+{
+   background-image :url(sciter:no-image.png);
+   background-repeat: repeat; 
+   min-width:20px; min-height:20px;
+   border:1px solid; border-color: #aaa #eee #eee #aaa; }
+   
+svg:root { size:*; background:#ffffff; overflow:hidden; }
+
+*:drop-marker { visibility:hidden; }
+
+/* edit box and numeric input*/
+/* widget { color:windowtext; } */
+    
+input[type="hidden"], [hidden] 
+{ 
+  visibility:none; 
+}
+
+widget[type="text"],input[type="text"],
+widget[type="password"],input[type="password"],
+widget[type="currency"],input[type="currency"],
+//widget[type="url"],input[type="url"],
+input:not([type])
+{
+  style-set: "std-edit";
+  style-set-base: "std-edit-base";
+}
+
+@image-map std-tree-icons
+{
+    src: url(sciter:tree-icons-x1.png) 100dpi,
+         url(sciter:tree-icons-x2.png);
+    cells:2 1; /* 2 columns, 1 row */
+    /* logical names of the parts, see radios.png */ 
+    items:
+      plus,
+      minus;
+} 
+
+@set std-edit-base 
+{
+  :root 
+  {
+    behavior:edit;   
+    context-menu:url(sciter:menu-edit.htm);  
+    cursor:text;
+    overflow-x:hidden-scroll;
+    flow:text;
+    white-space:pre;
+    height:1.4em; 
+    width:auto; 
+    text-align: start;
+    line-height:height(100%);
+    font-rendering-mode:snap-pixel;
+    font-variant-ligatures: none;
+  }
+  
+  :root[type="password"] {  behavior:password; }  
+  :root[type="currency"] {  text-align: right; behavior:currency; }
+  //:root[type="url"]      {  behavior:url; }
+  
+  :root:invalid          {  color:red; }
+
+  :root:empty[novalue]:not(:focus) { content: attr(novalue); color:gray; } 
+  :root:empty[placeholder]:not(:focus) { content: attr(placeholder); color:gray; } 
+ 
+}
+
+widget[type="decimal"], input[type="decimal"],
+widget[type="integer"], input[type="integer"],
+widget[type="number"], input[type="number"]
+{
+  style-set: "std-number-edit";
+  style-set-base: "std-number-edit-base";
+}
+
+@set std-number-edit-base
+  {
+    :root {
+      behavior:number;   
+      width: auto;
+      height:1.4em;
+      cursor:default;
+      context-menu:url(sciter:menu-edit.htm);
+      white-space: nowrap;
+      -filter:"-+.,0~9";
+      flow:"1 2" 
+           "1 3";
+      content-isolate:isolate; /* content does not match document rules */
+    }
+    :root:rtl
+    {
+      flow:"2 1" 
+           "3 1";
+    }
+    :root:not(:has-children-of-type(button)) { flow:horizontal; }
+    :root:invalid {  color:red; }
+  
+    :root > caption 
+    { 
+      display:block;
+      height:*; width:*;
+      flow:text;
+      behavior: edit;      
+      cursor:text;
+      white-space:pre;
+      overflow-x:hidden-scroll;
+    }
+        
+    :root[type="decimal"] { behavior:decimal; }
+    :root[type="integer"] { behavior:integer; -filter: "-+0~9"; }
+
+    :root[novalue]:not(:focus) > caption:empty { content: parent-attr(novalue); color:gray; } 
+    :root[placeholder]:not(:focus) > caption:empty { content: parent-attr(placeholder); color:gray; } 
+
+    :root > button
+    {
+      display:block; 
+      behavior:clickable; 
+      cursor:default;
+      height:0.5*;
+      min-height:5dip;
+      width:1.2em;
+      foreground-position:50% 50%;
+      foreground-size:5dip;
+      foreground-repeat:no-repeat;
+      fill:currentcolor;
+    }
+    
+    :root > button.minus
+    {
+      padding:0;
+      foreground-image: url(stock:chevron-down); 
+    }
+   
+    :root > button.plus
+    {
+      padding:0;
+      foreground-image: url(stock:chevron-up); 
+    }
+
+
+  }
+
+
+/* text button */
+
+widget[type="button"], input[type="button"], 
+input[type="reset"], input[type="submit"], 
+button
+{ 
+  style-set: "std-button";
+  style-set-base: "std-button-base";
+}
+
+toolbar > div > button,
+toolbar > button {
+  display:block;
+  style-set: "std-toolbar-button";
+  style-set-base: "std-toolbar-button-base";
+} 
+
+@set std-button-base
+  {
+    :root
+    { 
+      behavior:button;     
+      white-space: nowrap;
+      cursor:default;
+      text-align:center;
+      content-vertical-align:middle;
+    }
+  }
+  
+@set std-toolbar-button-base {
+    :root
+    { 
+      behavior:clickable;     
+      display:block;
+      flow:vertical;
+      white-space: nowrap;
+      cursor:default;
+      text-align:center;
+    }
+    
+    :root[type="checkbox"] { behavior:check; }
+    :root[type="radio"] { behavior:radio; }
+    :root[type="menu"] { behavior:clickable popup-menu; }
+    
+    :root:active > *
+    { 
+      transform:translate(1px,1px);
+    }
+    /* vertical alignment */    
+    :root > :not(popup):first-child { margin-top:*; }
+    :root > :not(popup):last-child { margin-bottom:*; }
+   
+} 
+
+widget[type="menu"], button[type="menu"]
+{ 
+  style-set: "std-button-menu";
+  style-set-base: "std-button-base";
+}
+
+toolbar > div > button[type="menu"],
+toolbar > button[type="menu"] {
+  display:block;
+  style-set: "std-toolbar-button-menu";
+  style-set-base: "std-toolbar-button-base";
+} 
+   
+button[type="selector"]
+{
+  style-set: "std-selector";
+  style-set-base: "std-button-base";
+} 
+
+/* radio button */
+input[type="radio"],
+button[type="radio"],
+widget[type="radio"]
+{ 
+  style-set:"std-radio";
+  style-set-base:"std-radio-base";
+}
+
+toolbar > div > button[type="radio"],
+toolbar > button[type="radio"] {
+  display:block;
+  style-set: "std-toolbar-button";
+  style-set-base: "std-toolbar-button-base";
+} 
+
+
+@set std-radio-base 
+{
+  input:root
+  { 
+    vertical-align:middle;
+    behavior:radio; 
+    cursor:default;
+  }
+  :root:not(input)
+  {
+    behavior:radio; 
+    vertical-align:baseline;
+    text-align:start;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+}
+
+/* checkbox button */
+input[type="checkbox"], widget[type="checkbox"], button[type="checkbox"]
+{ 
+  style-set: "std-checkbox";
+  style-set-base: "std-checkbox-base";
+}
+
+toolbar > div > button[type="checkbox"],
+toolbar > button[type="checkbox"] {
+  display:block;
+  style-set: "std-toolbar-button";
+  style-set-base: "std-toolbar-button-base";
+} 
+
+
+@set std-checkbox-base
+{
+  input:root
+  {
+    behavior:check;   
+    cursor:default;
+    vertical-align:middle;
+  }
+  :not(input):root
+  {
+    behavior:check; 
+    cursor:pointer;
+    white-space:nowrap;
+    vertical-align:baseline;
+  }
+}
+
+@set std-toggle-base {
+  
+  :root {
+    display:inline-block;
+    behavior:toggle;
+    flow:stack;
+    border:none;
+    background:none;
+    width:max-content;
+    height:1.4em;
+    padding:0 0 0 38dip;
+    cursor:pointer;
+  }
+
+  :root[type="radio"] { behavior:radio; }
+
+  :root::marker {
+    width:28dip; 
+    height:15dip;
+    background:threedlight;
+    border-radius:7dip;
+    margin:* * * 3dip;
+    foreground-image:url(stock:disk);
+    foreground-repeat:no-repeat;
+    foreground-position:1dip 50%;
+    foreground-size:13dip;
+    fill:window;
+    stroke:threedshadow;
+    stroke-width:1dip;
+  }
+  :root:checked::marker {
+    foreground-position:14dip 50%;
+    background:highlight;   
+  }
+
+  :root > option { text-align: start; }
+  :root > option:first-child { visibility:visible; }
+  :root > option:last-child { visibility:hidden; }
+  :root:checked > option:first-child { visibility:hidden; }
+  :root:checked > option:last-child { visibility:visible; }
+  
+} 
+
+
+toggle, button[type="toggle"] { 
+  style-set: std-toggle; 
+  style-set-base: std-toggle-base;
+}
+
+popup 
+{
+  style-set: "std-popup"; /* used to break chain of style-sets so <button><popup><button/></popup></button> will work */
+  style-set-base: "std-popup-base";
+}
+
+@set std-popup-base
+{
+  :root[role="overflow-tooltip"] 
+  { 
+    white-space:nowrap; 
+    overflow:none; 
+    size:max-content; 
+    text-indent:0; /* override inherited value */
+    popup-position: middle-left middle-left;
+  }
+  :root[role="overflow-tooltip"]:rtl {
+    popup-position: middle-right middle-right;
+  }
+
+:root[role="overflow-multiline-tooltip"] 
+  { 
+    width:*;
+    height:300dip;
+    max-height: max-content;
+    overflow-y:scroll-indicator; 
+    text-indent:0; /* override inherited value */
+    popup-position: top-left top-left;
+  }
+  :root[role="overflow-tooltip"]:rtl {
+    popup-position: top-right top-right;
+  }
+  
+
+  :root[role="tooltip"] 
+  {
+    font: system;
+    line-height:1.4em;
+    overflow:none;
+    text-overflow:none;
+    size:max-content;
+    text-indent:0; /* override inherited value */
+  }
+}
+
+@set std-progress-base
+{
+  :root {
+    behavior:progress;
+    color: color(button-text);
+    background: color(button-face);
+    height:0.6em;
+    width:8em;
+    padding:0;
+    vertical-align:middle;
+    overflow:hidden;
+  }
+  :root::marker {
+    width:length(progress-percent);
+    height: *;
+    background: currentcolor;
+  }
+  :root:busy::marker {
+    background: transparent;
+  }
+
+}
+
+progress,
+input[type="progress"],
+widget[type="progress"]
+{
+  style-set: "std-progress";
+  style-set-base: "std-progress-base";
+}
+
+@set std-meter-base
+{
+  :root {
+    behavior:progress;
+    color: color(button-text);
+    background: color(button-face);
+    height:0.6em;
+    width:8em;
+    padding:0;
+    vertical-align:middle;
+    overflow:hidden;
+  }
+  :root::marker {
+    width:length(progress-percent);
+    height: *;
+    background: currentcolor;
+  }
+}
+
+meter 
+{
+  style-set: "std-meter";
+  style-set-base: "std-meter-base";
+}
+
+/* select (not dropdown) */
+
+select[size]:not([size="1"]):not([type="select-dropdown"]):not([type="dropdown"]), 
+select[type="select"],
+select[type="list"],
+widget[type="select"],
+widget[type="list"]
+//popup[type="select"]
+{
+  style-set: "std-select";
+  style-set-base: "std-select-base";
+}
+
+/*select[type="select"][multiple=checkmarks], 
+select[type="list"][multiple=checkmarks], 
+select[size]:not([size="1"])[multiple=checkmarks], 
+widget[type="select"][multiple=checkmarks]
+{
+  style-set: "std-select-multiple-checkmarks";
+  style-set-base: "std-select-base";
+}*/
+
+@set std-select-switch-base
+{
+  :root
+  { 
+    display:inline-block;
+    behavior:select;
+    overflow-x:none; 
+    overflow-y:none; 
+    flow:horizontal;
+    size: max-content;
+  }
+
+  option 
+  { 
+    width:max-content;
+    white-space:pre;
+  }
+}
+
+switch, select[type="switch"] {
+  style-set: "std-select-switch"; 
+}
+
+@set std-select-base
+{
+  :root
+  { 
+    behavior:select; 
+    overflow-x:hidden; 
+    overflow-y:auto; 
+    flow:vertical;
+    size: auto;
+  }
+  
+  :root[multiple] { behavior:select-multiple; } 
+  :root[multiple=checkmarks] { behavior:select-checkmarks; }  
+  
+  //:root > popup:empty { content:" "; }
+
+  optgroup > caption 
+  { 
+    white-space:nowrap;
+    width:*;
+  }
+  option 
+  { 
+    min-height:1em;
+    width: *;
+    white-space:pre;
+  }
+  option:empty { min-width:0.6em; height:1.2em; flow:text; }
+
+  /* all elements in the options by default are non-visible */
+  option:has-children-of-type(option) > * { visibility:collapse; }
+  /* elements in open options are visible */
+  option:has-children-of-type(option):expanded > * { visibility:visible; }
+}
+
+
+/* simple multiselect (without check boxes) */
+
+select[type="list"][multiple],
+select[type="select"][multiple],
+widget[type="select"][multiple]
+{
+  style-set: "std-select-multiple";
+  style-set-base: "std-select-base";
+}
+
+/* multiselect with check boxes */
+select[type="list"][multiple="checkmarks"],
+select[type="select"][multiple="checkmarks"],
+widget[type="select"][multiple="checkmarks"]
+{
+  style-set: "std-select-multiple-checkmarks";
+  style-set-base: "std-select-base";
+}
+
+select[type="tree"],
+widget[type="tree"]
+{
+  style-set: "std-tree";
+  style-set-base: "std-tree-base";
+}
+
+@set std-tree-base
+{
+  :root
+  { 
+    behavior: tree-view;
+    overflow:auto; 
+    flow:vertical;
+    padding:2px; 
+    width: 300px;
+    height: 150px;
+    color: windowtext;
+  }
+
+  :root:disabled
+  { 
+    color:graytext;
+  }
+
+  option:not(:node) /*:leaf*/
+  { 
+    //flow:default;
+    padding:1dip 5dip;
+    margin-left:16dip;
+    min-height:1.2em;
+    width:*;
+    max-width:max-content;
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow:ellipsis;
+  }
+  
+  option:not(:node):rtl {
+    margin-left:0;
+    margin-right:16dip;
+  }
+
+  option:node
+  {
+    //flow:vertical;
+    margin:0;
+    padding-right:0;
+    padding-left:16dip;
+    foreground-repeat: no-repeat;
+    foreground-position: left 3dip top 6dip;
+    width: *;
+    max-width:auto;
+    min-height:1.2em;
+    foreground-image-cursor:pointer;
+  }
+  option:node:rtl
+  {
+    margin:0;
+    padding-right:16dip;
+    padding-left:0;
+    //foreground-position-right: 3dip;
+    //foreground-position-left: auto;
+    foreground-position: right 3dip top 6dip;
+  }
+  
+  /* all elements in the options by default are non-visible */
+  option:node > *
+  { visibility:none; }
+
+  /* all option captions */  
+  option:node > text,
+  option:node > caption
+  {
+    min-height:1.2em;
+    white-space: nowrap;    
+    padding:1dip 5dip;
+    visibility:visible; /* always visible */
+    width:max-intrinsic;
+    overflow-x: hidden;
+    text-overflow:ellipsis;
+  }
+
+  option:node:collapsed      { foreground-image:url(stock:arrow-e-hollow); foreground-size:5dip 9dip; }
+  option:node:collapsed:rtl  { foreground-image:url(stock:arrow-w-hollow); }
+
+  option:node:expanded       { foreground-image:url(stock:arrow-se); foreground-size:6dip 6dip; }
+  option:node:expanded:rtl   { foreground-image:url(stock:arrow-sw); }
+
+
+  /* elements in open options are visible */
+  option:node:expanded > * { visibility:visible; }
+
+  /* tree line support: */
+  :root[treelines] option > option 
+  {
+    display: list-item;
+    list-style-type: tree-line;
+    list-marker-size:1dip;
+    list-marker-color:#ccc;
+    list-marker-style:solid;      
+  }
+  
+  :root[treelines] option:node:collapsed  { foreground-image:image-map(std-tree-icons,plus); foreground-size:11dip; foreground-position: left 3dip top 4dip; }
+  :root[treelines] option:node:collapsed:rtl  { foreground-position: right 3dip top 4dip; }
+
+  :root[treelines] option:node:expanded   { foreground-image:image-map(std-tree-icons,minus); foreground-size:11dip; foreground-position: left 3dip top 4dip; }
+  :root[treelines] option:node:expanded:rtl   { foreground-position: right 3dip top 4dip; }  
+
+  //:root[treelines] option:not(:node)     {  margin-left:8dip; }
+  //:root[treelines] option:not(:node):rtl {  margin-right:8dip; margin-left:0;}
+
+}    
+
+select[type="tree"][multiple="checkmarks"],
+widget[type="tree"][multiple="checkmarks"]
+{
+  style-set: "std-tree-checkmarks";
+  style-set-base: "std-tree-base";
+}
+
+/*
+input[type="file-path"],
+widget[type="file-path"],
+input[type="folder-path"],
+widget[type="folder-path"],
+input[type="file"],
+widget[type="file"] 
+{ 
+  style-set: "std-file-selector"; 
+  style-set-base: "std-file-selector-base";
+}
+
+@set std-file-selector-base
+{
+  :root 
+  {
+    flow:horizontal;
+    width:20em;
+  }
+  
+  :root[type="file-path"],
+  :root[type="folder-path"] { behavior:path-select; }
+
+  :root[type="file"]        { behavior:file; }
+  
+  :root > caption
+  {
+    behavior:file-icon;
+    size:*;
+    overflow-x: hidden;
+    text-overflow:path-ellipsis;
+    foreground-repeat:no-repeat;
+    foreground-position: 2dip 50%;
+  }
+  
+}
+*/
+
+
+/* dropdown combobox */
+widget[type="select-dropdown"],
+select[type="dropdown"],
+select[type="select-dropdown"],
+select:not([size]):not([type="select"]),
+select[size=1]:not([type="select"])
+{ 
+  style-set: "std-select-dropdown";
+  style-set-base: "std-select-dropdown-base";
+}
+
+@set std-select-dropdown-base
+{
+  :root
+  { 
+    behavior:dropdown-select;
+    padding:0;
+    flow:horizontal;  /* caption, button*/
+    vertical-align:baseline;
+    width: auto;
+    height: max-content;
+    overflow-x:hidden;
+    content-isolate:isolate; /* content does not match document rules */
+  }
+
+  /* caption portion of the combobox */
+  :root > caption
+  { 
+    display:block;
+    behavior:clickable;
+    overflow-x:hidden; 
+    width:*; /* everything left from the button */
+    height:*; /* takes full height */
+    min-height:1.2em;
+    vertical-align:middle;
+    white-space: pre;
+  }
+      
+  :root[editable] > caption
+  { 
+    flow:text;
+    behavior:edit; 
+    cursor:text;
+    context-menu:url(sciter:menu-edit.htm);
+  }
+
+  /* popup select element */
+  :root > popup.list
+  { 
+    style-set:""; // so std-select-dropdown style set can be redefined / inherited
+    margin:0;
+    overflow-x:hidden; 
+    overflow-y:auto; 
+    display:block; 
+    visibility:collapse;/* invisible normally */
+    behavior:select; 
+    min-width: max-content;
+    width: *;
+    height: auto;
+    max-height: max-content;
+    white-space:pre;
+  }
+  :root > popup:empty { content:" "; }
+  :root > popup:popup
+  {
+    visibility:visible;/* visible when popup */
+  }
+  :root > popup > option:empty { min-width:0.6em; height:1.2em; flow:text; }
+  
+  /* dropdown button of the combobox */
+  :root > button
+  {
+    style-set:none;
+    display :block; 
+    width   :1em;
+    height  :*;
+    background-image  :none;
+    foreground-image:url(stock:chevron-down); /* that arrow */
+    //foreground-size: 5dip 3dip; /* that arrow */
+    foreground-repeat: no-repeat;
+    foreground-position: 50% 50%;
+    behavior:clickable; 
+    white-space:nowrap;
+    vertical-align:middle;
+  }
+
+  :root[multiple] {
+    behavior: dropdown-multi-select;
+  }
+  :root[multiple] > popup 
+  {
+    behavior: select-checkmarks;
+    style-set: "std-select-checkmarks";
+  }
+  :root[multiple] > var
+  {
+    display:block;
+    behavior:clickable;
+    overflow-x:hidden; 
+    width:3em; 
+    height:*; /* takes full height */
+    min-height:1.2em;
+    vertical-align:middle;
+    white-space: pre;
+    text-align:center;
+  }
+  :root[placeholder]:not([multiple]):not(:focus):not(:owns-popup) > caption:empty::marker { 
+    width:*;
+    overflow-x:hidden;
+    line-height:height(100%);
+    padding:inherit;
+    content: parent-attr(placeholder); color:grey; 
+  } 
+  :root[novalue]:not([multiple]):not(:focus):not(:owns-popup) > caption:empty::marker { 
+    width:*;
+    overflow-x:hidden;
+    line-height:height(100%);
+    padding:inherit;
+    content: parent-attr(novalue); color:grey;
+  } 
+
+}
+
+@set std-select-popup-base
+{
+  /* popup select element */
+  :root
+  { 
+    margin:0;
+    overflow-x:hidden; 
+    overflow-y:auto; 
+    display:block; 
+    visibility:collapse;/* invisible normally */
+    behavior:select; 
+    min-width: max-content;
+    width: *;
+    height: auto;
+    max-height: max-content;
+    white-space:pre;
+  }
+  :root:empty { content:" "; }
+  :root:popup
+  {
+    visibility:visible;/* visible when popup */
+  }
+  :root > option:empty { min-width:0.6em; height:1.2em; flow:text; }
+}
+
+popup[type=select]
+{ 
+  style-set: "std-select-popup";
+  style-set-base: "std-select-popup-base";
+}
+
+
+@set std-htmlarea-base
+{
+  :root 
+  {
+    behavior:richtext;
+    width:*;
+    height:150px;
+    overflow-x:auto; 
+    overflow-y:scroll; 
+    cursor:text;
+    context-menu:url(sciter:menu-richtext.htm);
+    font-rendering-mode:snap-pixel;
+    font-variant-ligatures: none;
+  }
+  *::mark(misspell) { text-decoration:wavy underline #f00; }  
+}
+
+@set std-textarea-base
+{
+  :root 
+  {
+    behavior:textarea; 
+    context-menu:url(sciter:menu-edit.htm);  
+    flow:text;
+    font: system;
+    size: auto;
+    white-space:pre-wrap;
+    cursor:text;
+    overflow-x:auto; 
+    overflow-y:scroll;     
+    font-rendering-mode:snap-pixel;
+    font-variant-ligatures: none;
+  }
+  
+  :root:disabled
+  {
+    overflow:hidden; 
+    cursor:default;
+  }
+  
+  :root[wrap="off"]
+  {
+    overflow-x:scroll; 
+    overflow-y:scroll; 
+    white-space:pre;
+  }
+  
+  :root::mark(misspell) { text-decoration:wavy underline #f00; }
+  :root:empty[novalue]:not(:focus) { content: attr(novalue); color:gray; } 
+  :root:empty[placeholder]:not(:focus) { content: attr(placeholder); color:gray; } 
+}
+
+textarea, widget[type="textarea"]
+{
+  style-set: "std-textarea";
+  style-set-base: "std-textarea-base";
+}
+
+@set std-plaintext-base
+{
+  :root {
+    padding:0;
+    flow:vertical;
+    behavior:plaintext;
+    background:#fff; 
+    color:#000;
+    border:1dip solid #eee;
+    overflow:auto;
+    font-family:monospace;
+    font-rendering-mode:snap-pixel;
+    size:*; 
+    context-menu:url(sciter:menu-edit.htm);  
+    font-variant-ligatures: none;
+  }
+  :root > text {
+    white-space: pre-wrap;
+    padding-left: 4dip;
+    cursor:text;
+    display:block;
+  }
+ 
+  :root:disabled
+  {
+    overflow:hidden; 
+    cursor:default;
+  }
+  :root[wrap="off"]
+  {
+    overflow-x:scroll; 
+    overflow-y:scroll; 
+    white-space:pre;
+  }
+
+  *::mark(misspell) { text-decoration:wavy underline #f00; }  
+}
+
+@set std-plaintext-numbers-base
+{
+  :root {
+    padding:0;
+    flow:vertical;
+    behavior:plaintext;
+    background:#eee; border:1dip solid #eee;
+    overflow:auto;
+    font-family:monospace;
+    font-rendering-mode:snap-pixel;
+    size:*; 
+    context-menu:url(sciter:menu-edit.htm);  
+  }
+  :root > text {
+    white-space: pre-wrap;
+    background:#fff;
+    color:#000;
+    margin-left: 3em;
+    padding-left: 4dip;
+    cursor:text;
+    display:list-item;
+    list-style-type: index;
+    list-marker-color:#aaa;
+  }
+  :root > text:last-child { padding-bottom:*; }    
+  :root > text:nth-child(10n) { list-marker-color:#000; }
+ 
+  :root:disabled
+  {
+    overflow:hidden; 
+    cursor:default;
+  }
+  :root[wrap="off"]
+  {
+    overflow-x:scroll; 
+    overflow-y:scroll; 
+    white-space:pre;
+  }
+  *::mark(misspell) { text-decoration:wavy underline #f00; }  
+}
+
+plaintext { 
+  style-set: "std-plaintext"; 
+  style-set-base: "std-plaintext-base"; 
+}
+plaintext[linenumbers] { 
+  style-set: "std-plaintext-numbers"; 
+  style-set-base: "std-plaintext-numbers-base"; 
+}
+
+htmlarea, widget[type="htmlarea"]
+{
+  style-set: "std-htmlarea";
+  style-set-base: "std-htmlarea-base";
+}
+
+@set std-hslider-base
+{
+  :root 
+  {
+    display:inline-block;
+    behavior:slider;
+    cursor:default;
+    vertical-align:middle;
+    content-vertical-align: middle;
+    min-width:0;
+    flow:stack;
+    content-isolate:isolate; /* content does not match document rules */
+    //var(slider-position):0px;
+  }
+
+  :root[inverted] {
+    background-position: right 0px top 0px;
+    horizontal-align:right;
+  }
+
+	:root > button,
+  :root > .slider
+  { 
+    display:block;
+    behavior:none;
+    margin:*; padding:0;
+    margin-left: var(slider-position,0px);
+    transform: translate(-50%,0);
+  }
+
+  :root[inverted] > button,
+  :root[inverted] > .slider,
+  :root:rtl > button,
+  :root:rtl > .slider
+  { 
+    margin-left:*;
+    transform: translate(50%,0);
+    margin-right: var(slider-position,0px);
+  }
+
+  :root:tab-focus
+  { 
+    outline:1px dotted invert -1px; 
+  }
+
+}
+
+@set std-vslider-base
+{
+  :root 
+  {
+    display:inline-block;
+    behavior:slider;
+    cursor:default;
+    vertical-align:middle;
+    content-horizontal-align: center;
+    overflow:visible;
+    min-height:0;
+    flow:stack;
+    content-isolate:isolate; /* content does not match document rules */
+    //var(slider-position):0px;
+  }
+
+  :root > button,
+  :root > .slider
+  { 
+    display:block;
+    behavior:none;
+    margin:0; padding:0;
+    margin-top: var(slider-position,0px);
+    transform: translate(0,-50%);
+  }
+  :root:tab-focus
+  { 
+    outline:1px dotted invert -1px; 
+  }
+}
+
+
+widget[type="hslider"],
+input[type="hslider"]
+{ 
+  style-set:"std-hslider";
+  style-set-base:"std-hslider-base";
+}
+
+widget[type="vslider"],
+input[type="vslider"]
+{ 
+  style-set: "std-vslider";
+  style-set-base:"std-vslider-base";
+}
+
+widget[type="vscrollbar"],
+input[type="vscrollbar"]
+{
+  behavior: scroll-bar;
+  width:auto;
+  height:*;
+}
+
+widget[type="hscrollbar"],
+input[type="hscrollbar"]
+{
+  behavior: scroll-bar;
+  width:*;
+  height:auto;
+}
+
+frame 
+{ 
+  behavior: frame; 
+  width:*; 
+  height:*;
+}
+iframe 
+{ 
+  behavior: frame; 
+  width:300px; 
+  height:150px;
+}
+
+iframe[history],
+frame[history]
+{
+  behavior: history frame; 
+}
+
+frame[type="pager"]
+{
+  style-set: "std-pager";
+}
+
+@set std-pager
+{
+  :root 
+  {
+    flow:null; /* it will use manual layout */
+    behavior:pager;
+    background: #EEE;
+    size:*;
+    padding:12px;
+    border-spacing:12px;
+  }
+  
+  :root > pagebox
+  {
+    background-color:white;
+    /*border: 1px solid black;*/
+    box-shadow: 2px 2px 6px #888;
+  }
+}
+
+frameset[cols] 
+{
+  behavior: frame-set; 
+  width:*; 
+  height:*;
+  flow:horizontal;
+}
+
+frameset[cols]:not(:has-children-of-type(splitter)):not(:has-children-of-type(hr))
+{
+  border-spacing:3px;
+  background-color:threedface;
+}
+
+frameset[cols] > * { height:*; }
+frameset[cols] > hr,
+frameset[cols] > splitter { width:5px; cursor:e-resize; background-color: threedface; margin:0; border:none; }
+frameset[cols] > hr:hover,
+frameset[cols] > splitter:hover { background-color:threedhighlight threedshadow threedshadow threedhighlight; }
+
+frameset[rows] 
+{
+  behavior: frame-set; 
+  width:*; 
+  height:*;
+  flow:vertical;
+}
+
+frameset[rows]:not(:has-children-of-type(splitter)):not(:has-children-of-type(hr))
+{
+  border-spacing:3px;
+  background-color:threedface;
+}
+frameset[rows] > * { width:*; }
+frameset[rows] > hr,
+frameset[rows] > splitter { height:5px; cursor:n-resize; background-color: threedface; margin:0; border:none; }
+frameset[rows] > hr:hover,
+frameset[rows] > splitter:hover { background-color:threedhighlight threedhighlight threedshadow threedshadow ; }
+
+frameset[history] { behavior: history frame-set; } 
+
+@set std-popup-menu-base
+{
+  :root, menu
+  {
+    behavior:menu; /*is a menu*/
+    flow: vertical;
+    visibility:collapse; 
+    width:max-content;
+    margin:0 1px; /* to offset it from parent li */    
+    font: system;
+    cursor:default;
+    padding:0;
+  }
+  :root.columns, menu.columns {
+    flow:horizontal;
+  } 
+
+  :root.columns > div:not(:first-child), menu.columns > div:not(:first-child) {
+    border-left:1px solid threedshadow;
+  }
+
+  :root:popup, menu:popup, :root.visible
+  {
+    visibility:visible;
+  }
+
+  /* menu item in popup menus */
+  menu > option, li 
+  {  
+    flow:horizontal;
+    width:*;
+    white-space:nowrap;
+    text-align: start;
+
+    color:windowtext; 
+    padding-left:2em;    /* room for icon */
+    padding-right:1em; /* room for the arrow */
+    padding-top:5dip; 
+    padding-bottom:5dip;
+
+    foreground-size: 1.2em;  
+    foreground-repeat: no-repeat;      
+    foreground-position: 0.4em 50%;
+
+    fill:threeddarkshadow;
+    stroke:none;
+  }
+  
+  menu > option:rtl, li:rtl 
+  { 
+    padding-right:2em; /* room for icon */
+    padding-left:1em; /* room for the arrow */
+  }
+
+  menu > option.break-before, li.break-before {
+    clear:before;
+  }
+
+  /*menu > option:current,
+  li:current
+  {
+    fill:highlighttext; 
+  }*/
+
+  menu > option:disabled, 
+  li:disabled 
+  { 
+     color:threedshadow; font-weight: normal; 
+     fill:threedshadow;
+  }  
+
+  menu > option:has-child-of-type(menu),
+  li:has-child-of-type(menu)
+  {
+    foreground-image:url(stock:chevron-right); /* that arrow */
+    foreground-size: 5dip 7dip;
+    foreground-repeat: no-repeat;
+    foreground-position-top: 50%;
+    foreground-position-left: auto;
+    foreground-position-right: 4dip;
+  }
+  
+  menu > option:has-child-of-type(menu):rtl,
+  li:has-child-of-type(menu):rtl
+  {
+    foreground-image:url(stock:chevron-left); /* that arrow */
+    foreground-position-left: 4dip;
+    foreground-position-right: auto;
+  }
+
+  /* accesskey label (span) */
+  span.accesskey
+  {
+    display:block;
+    width:max-content;
+    margin-left:*; /* spring to attach it to the right */
+    padding-left:1em;
+    /*color:threeddarkshadow;*/
+  }
+
+  menu > option:current span.accesskey,
+  li:current span.accesskey
+  {
+    color:brown;
+  }
+
+  /* menu separator */
+  menu > hr 
+  {
+    margin:2dip;
+    border:none; 
+    border-bottom:1px solid threedshadow;
+  }
+  menu > caption
+  {
+    margin:2dip; 
+    color:graytext;
+  }
+
+  //// ICONS //////////////////
+  li[command="edit:copy"] { foreground-image: url(icon:copy); }
+  li[command="edit:cut"]  { foreground-image: url(icon:cut); }
+  li[command^="edit:paste"]{ foreground-image: url(icon:paste); }
+  li[command="edit:undo"] { foreground-image: url(icon:undo); }
+  li[command="edit:redo"] { foreground-image: url(icon:redo); }
+  li[command="edit:insert-table-row:before"] { foreground-image: url(icon:insert-row-before); }
+  li[command="edit:insert-table-row:after"] { foreground-image: url(icon:insert-row-after); }
+  li[command="edit:insert-table-column:before"] { foreground-image: url(icon:insert-column-before); }
+  li[command="edit:insert-table-column:after"] { foreground-image: url(icon:insert-column-after); }
+  li[command="edit:merge-table-cells"] { foreground-image: url(icon:merge-cells); }
+  li[command="edit:split-table-cells"] { foreground-image: url(icon:split-cells); }
+  li[command="edit:delete-table-rows"] { foreground-image: url(icon:delete-row); }
+  li[command="edit:delete-table-columns"] { foreground-image: url(icon:delete-column); }
+
+  /////////////////////////////
+
+}
+
+
+menu.popup,
+menu.context,
+menu:synthetic,  /* builtin popup menu */
+button[type=menu] > menu
+{
+  appearance:auto;
+  style-set: "std-popup-menu";
+  style-set-base: "std-popup-menu-base";
+}
+
+menu.window { behavior: sys-menu-bar; }
+menu.window menu { behavior: sys-menu; }
+
+widget[type="calendar"],
+input[type="calendar"]
+{
+  style-set: "std-calendar";
+  style-set-base: "std-calendar-base";
+}
+
+@set std-calendar-base /* style block for the content of the calendar */
+{
+  :root
+  {
+    behavior:calendar;      
+    overflow:hidden;
+    min-width: max-content;
+    min-height: min-content;
+    white-space: nowrap;
+    cursor:default;
+    font:system;
+    content-isolate:isolate; /* content does not match document rules */
+  }
+    
+  :root:tab-focus /* :root here is the element with the style-set set */ 
+  {
+    outline:1px dotted windowtext -4px; /* inside */
+  }
+
+  table
+  { 
+    size:*;  
+    border-spacing:0;
+  }
+
+  tbody {size:*;}
+   
+  caption
+  {
+    flow:horizontal;
+    width:*;
+  }
+    
+  caption > div.month  { width:max-content; }
+  caption > div.year   { width:max-content; }
+    
+  div.nav 
+  {
+    width:2em;
+    height:*;
+    padding-top:0.2em;
+    foreground-position:50% 50%;
+    foreground-size:7dip;
+    foreground-repeat:no-repeat;
+  }
+  
+  div.prev.nav       { margin-right:*; foreground-image:url(stock:chevron-left); }
+  div.prev.nav:rtl   { margin-right:0; margin-left:*; }
+  div.next.nav       { margin-left:*; foreground-image:url(stock:chevron-right); }
+  div.next.nav:rtl   { margin-left:0; margin-right:*; }
+
+  td 
+  {
+    width: *;
+    height: *;
+    text-align:center;
+    vertical-align:middle;
+    overflow:visible;
+  }
+       
+  th             { text-align:center; }
+
+  td.month.off,
+  td.day.off     { color: brown; }
+  
+  td.day.other-month,
+  td.year.other-year,
+  td.decade.other-decade { color: graytext; }
+
+  td.today
+  {
+    border-color:red;
+    border-radius:2dip;
+  }
+   
+  div.button
+  {
+    display:block;
+    padding:* 4dip;
+    text-align:center;
+    height:*;
+  }
+    
+  footer 
+  {
+    line-height:1.4em;
+    flow:horizontal;
+    horizontal-align:right;
+    vertical-align:middle;
+  }
+  footer:rtl
+  {
+    horizontal-align:left;
+  }
+    
+  footer > label
+  {
+    display:block;
+    width:max-content;
+  } 
+}
+
+widget[type="date"],
+input[type="date"]
+{
+    style-set: "std-date";
+    style-set-base: "std-date-base";
+}
+
+@set std-date-base /* style block for the date ctl, derived from std-edit */
+{
+  :root
+  { 
+    behavior:date;
+    cursor:default;
+    flow:horizontal;
+    width:max-content;
+    height:min-content;
+  }
+
+  :root > popup 
+  {
+    size:max-content;
+  }
+  :root > caption 
+  { 
+    behavior: masked-edit;      
+    size:*;
+    min-width:max-content;
+    min-height:1.2em;
+    cursor:default;
+    white-space:pre;
+  }
+  :root > caption > span
+  {
+    display:inline-block;
+    cursor:text;
+  }
+  :root > caption > span.day { width:1.3em; text-align:center; }
+  :root > caption > span.month { width:1.3em; text-align:center; }
+  :root > caption > span.year { width:2.6em; text-align:center; }
+
+  :root > caption > span.year:empty { content:"yyyy"; }
+  :root > caption > span.month:empty { content:"m"; }
+  :root > caption > span.day:empty { content:"d"; }
+
+  :root > caption > span:current
+  {
+    background-color: transparent;
+    color: windowtext;
+  }
+   
+  :root > button 
+  { 
+    display:block;
+    transition:none;
+    behavior: none;
+    height:*;
+    width: system-scrollbar-width;
+    padding:0; 
+  }
+  
+}     
+  
+input[type="masked"]
+{
+  style-set: "std-masked-edit";
+  style-set-base: "std-masked-edit-base";
+}
+
+@set std-masked-edit-base
+{
+  :root
+  { 
+    display:inline-block;
+    font-family:monospace;
+    flow:text;
+    behavior:masked-edit;
+    text-align:center;
+    cursor:auto;
+    white-space:pre;
+    min-height:1em;
+    min-width:1em;
+    width:max-content;
+    context-menu:url(sciter:menu-edit.htm);
+  }
+  :root > span
+  {
+    display:inline-block;
+    text-align:start;
+    white-space:pre;
+    width:max-intrinsic;
+    cursor:text;
+  }
+}
+  
+widget[type="time"],
+input[type="time"]
+{
+  style-set: "std-time-edit";
+  style-set-base: "std-time-edit-base";
+}
+
+@set std-time-edit-base
+{
+  :root
+  {
+    behavior:time; 
+    width: max-content;
+    height: min-content;
+    cursor:default;
+    white-space: nowrap;
+    flow:"1 2" 
+         "1 3" ;
+    context-menu:url(sciter:menu-edit.htm);
+    vertical-align:baseline;
+  }
+  :root:rtl
+  {
+    flow:"2 1" 
+         "3 1";
+  }
+  
+  :root:invalid
+  {
+    color:red;
+  }
+
+  :root > caption 
+  { 
+    behavior: masked-edit;      
+    width:*;
+    min-width:max-content;
+    line-height:1.2em; 
+    cursor:default;
+    white-space:pre;
+    padding:3dip; 
+  }
+  :root > caption > span
+  {
+    display:inline-block;
+    text-align:center;
+    cursor:text;
+  }    
+  
+  :root > caption > span.hour { width:1.4em; }
+  :root > caption > span.minute { width:1.4em; }
+  :root > caption > span.second { width:1.4em; }
+  :root > caption > span.ampm { width:1.8em; }
+
+  :root > caption > span.hour:empty { content:"h"; }
+  :root > caption > span.minute:empty { content:"m"; }
+  :root > caption > span.second:empty { content:"s"; }
+  :root > caption > span.ampm:empty { content:"am"; }
+  
+  :root > button
+  {
+    behavior:clickable;
+    display:block;
+    cursor:default;
+    height:0.5*;
+    padding:0;
+    width:system-scrollbar-width;
+  }
+}
+
+details
+{
+  style-set: "std-details";
+  style-set-base: "std-details-base";
+}
+
+
+@set std-details-base
+{
+  details { behaviors:details; }
+  details > :not(summary) { visibility:none; }
+  details:expanded > :not(summary) { visibility:visible; }
+}
+
+
+@set std-fieldset-base { }
+
+fieldset
+{
+  style-set: "std-fieldset";
+  style-set-base: "std-fieldset-base";
+}
+ 
+
+@set std-terminal {
+
+  :root {
+    behavior: terminal;
+    background-color: #333;
+    color:#fff;
+    font-family:monospace;
+    font-size:10pt;
+    font-rendering-mode:snap-pixel;
+    font-variant-ligatures: none;
+    overflow-y:auto;
+    overflow-x:hidden;
+    border:1dip solid #eee;
+    width:*;
+    height:*;
+    padding:3px;
+  }
+
+  :root[columns] {
+    width:auto;
+    overflow-x:auto;
+  }
+
+  text { 
+    display:block; 
+    flow:text;
+    white-space:pre; 
+    //color:#fff; 
+  }
+
+  //text::mark(blink)
+  text::mark(bold) { font-weight: bold; }
+  text::mark(invisible) { color:transparent; }
+  text::mark(underline) { text-decoration:underline; }
+  text::mark(strikethrough) { text-decoration:line-through; }
+  
+  text::mark(black) { color:black; }
+  text::mark(red) { color:red; }
+  text::mark(green) { color:#32CD32; }
+  text::mark(yellow) { color:yellow; }
+  text::mark(blue) { color:#1E90FF; }
+  text::mark(magenta) { color:magenta; }
+  text::mark(cyan) { color:cyan; }
+  text::mark(white) { color:white; }
+
+  text::mark(black,dim) { color:#808080; }
+  text::mark(red,dim) { color:#8B0000; }
+  text::mark(green,dim) { color:#006400; }
+  text::mark(yellow,dim) { color:#999900; }
+  text::mark(blue,dim) { color:#021691; }
+  text::mark(magenta,dim) { color:#8B008B; }
+  text::mark(cyan,dim) { color:#008B8B; }
+  text::mark(white,dim) { color:#808080; }
+
+  text::mark(background-black) { background-color:black; }
+  text::mark(background-red) { background-color:red; }
+  text::mark(background-green) { background-color:green; }
+  text::mark(background-yellow) { background-color:yellow; }
+  text::mark(background-blue) { background-color:blue; }
+  text::mark(background-magenta) { background-color:magenta; }
+  text::mark(background-cyan) { background-color:cyan; }
+  text::mark(background-white) { background-color:white; }
+
+  text::mark(background-black,dim) { background-color:#404040; }
+  text::mark(background-red,dim) { background-color:#8B0000; }
+  text::mark(background-green,dim) { background-color:#006400; }
+  text::mark(background-yellow,dim) { background-color:#999900; }
+  text::mark(background-blue,dim) { background-color:#021691; }
+  text::mark(background-magenta,dim) { background-color:#8B008B; }
+  text::mark(background-cyan,dim) { background-color:#008B8B; }
+  text::mark(background-white,dim) { background-color:#b0b0b0; }
+
+}
+
+terminal { 
+  style-set: "std-terminal"; 
+}
+
+[selectable] {
+  behavior:selectable;
+  context-menu:url(sciter:menu-selectable.htm);
+  text-selection: currentcolor morph(highlight,opacity:0.4);
+  cursor:text;
+}
+
+[selectable] :selected {
+  background: morph(highlight,opacity:0.4);
+}
+
+canvas[type="webgl"],
+canvas[type="3d"] {
+  behavior: webgl;
+}
+
+canvas:not([width]) {
+  size:*;
+}
+
+
+
+
+          :content-editable::mark(misspell) { text-decoration:wavy underline #f00; } 
+
+        h1:content-editable:empty,
+        h2:content-editable:empty,
+        h3:content-editable:empty,
+        h4:content-editable:empty,
+        h5:content-editable:empty,
+        h6:content-editable:empty,
+        dd:content-editable:empty,
+        dt:content-editable:empty,
+         p:content-editable:empty,
+      text:content-editable:empty,       
+       div:content-editable:empty,
+        li:content-editable:empty,
+   section:content-editable:empty,  
+    header:content-editable:empty,  
+    footer:content-editable:empty,  
+        td:content-editable:empty,
+        th:content-editable:empty,
+   caption:content-editable:empty,
+blockquote:content-editable:empty,
+    center:content-editable:empty,
+   address:content-editable:empty { min-width:0.6em; min-height:1.2em; flow:text; }
+   
+
+/*:selected {
+  outline: 3dip nesw-hatch highlight -3dip; 
+}*/

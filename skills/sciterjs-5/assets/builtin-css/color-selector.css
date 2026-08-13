@@ -1,0 +1,268 @@
+
+@set color-selector  {
+  :root {
+    var(clr): #ff0000;
+    display:block;
+    width:214px;
+    background:var(button-scrollbar);
+    padding:7px;
+    font:system;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+
+  :root > div.sliders {
+    width:*;
+    flow:vertical;
+    margin:3px 0;
+    padding-left:2.4em;
+    min-height:2.4em;
+    vertical-align:middle;
+  }
+
+  div.sliders::marker {
+    display:block;
+    size:2.2em;
+    margin:* 0;
+    background: url(sciter:no-color.png) repeat;
+    background-size:6px;
+    background-clip:border-box;
+    border-radius:50%;
+    foreground: url(stock:disk) 50% 50% no-repeat;
+    foreground-size:100%;
+    fill:var(clr);
+    stroke:none;
+  }
+
+  div.sliders > input(h) {
+    border:none;
+    height: 6px;
+    width:160px;
+    margin-left:*;
+    padding:6px 0; 
+    background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  }
+
+  div.sliders > input(a) {
+    border:none;
+    height: 6px;
+    width:160px;
+    margin-left:*;
+    padding:6px 0; 
+    background: url(sciter:no-color.png) repeat linear-gradient(to right, #00000000 0%, morph(var(clr),opacity:1) 100%);
+    background-size:6px;
+  }
+
+  div.layers { 
+    width:200px;
+    height:124px;
+    flow:stack;
+    margin:*;
+  }
+
+  div.value {
+    size:*;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 1%, rgba(0,0,0,1.0) 100%); 
+  }
+  div.saturation {
+    size:*;
+    background:linear-gradient(to right, var(clr) 0%, #ffffff 100%);
+  }
+
+  div.rep { 
+    width:*; 
+    flow:stack; 
+  }
+  
+  div.rep > form { 
+    border-spacing:6px;
+    flow:row(input span,input span,input span);
+    width:max-content;
+    margin:0 *;
+  }
+
+  div.rep > form[alpha=true] {
+    flow:row(input span,input span,input span,input span); 
+  }
+
+  div.rep > form > input { display:block; width:5ch;}
+
+  div.rep > form > span { display:inline-block; margin:0 *; width:max-content; }
+
+  div.rep > icon.switch {
+    display:block;
+    margin:* 0 0 *;     
+    behavior:clickable;
+    size:1.2em;
+  }
+
+  div.rep > icon:hover {
+    foreground-color:var(highlight-hover);
+  }
+
+  
+/*
+  //icon|down
+  
+  div.switch {
+    height:1.8em;
+    width:0.9em;
+  }
+
+  div.switch > icon {
+    size:0.9em;
+    behavior:clickable;
+  }
+
+  div.switch > icon:hover {
+    foreground-color:var(highlight-hover);
+  }
+  
+  div.numerics {
+    flow:horizontal;
+    width:200px;
+    margin:0 *;
+    border-spacing:6px;
+  }
+
+  div.numerics form { width:*; flow:horizontal; line-height:1.8em; }
+
+  div.numerics input { display:block; width:*; line-height:1.2em; padding:0;}
+  div.numerics input caption { padding:1px 3px; }
+  div.numerics input.sole { padding:1px 3px; line-height:1.4em; }
+  */
+
+  [name="extra"] {
+    margin:6px 0px;
+  }
+
+  div.predefined {
+    flow:horizontal-wrap;
+    border-spacing:*;
+    margin:6px 0 0 0;
+    flow:row(span,span,span,span,span,span,span,span,span);
+  }
+  div.predefined > span {
+    display:inline-block;
+    width:1.6em;
+    height:1.6em;
+  }
+  div.predefined > span:hover {
+    outline:2px solid var(accent);
+  }
+
+  :root:popup {
+    margin:3px -7px;
+  }
+
+}
+
+widget[type="color"] { 
+  prototype: ColorSelector url(color-selector.js); 
+  style-set:color-selector; 
+  content-isolate:isolate;
+}
+
+
+@set color-input 
+{
+  :root
+  {
+    font:system;
+    display:inline-block;
+    flow:horizontal;
+    color: color(widget-text);
+    background: color(widget-back);
+    border:none;
+    text-selection: color(selection-nf-text) color(selection-nf);
+    padding:0;
+    width: max-content;
+    height:min-content;
+    min-height:1.8m;
+    border-radius: length(border-radius); 
+    popup-position: at-bottom;
+    border-spacing:-1px;
+  }
+
+  :root:owns-popup,
+  :root:focus            { text-selection: color(selection-text) color(selection); }
+  :root:disabled         { background:color(widget-disabled); color:color(widget-disabled-text); }  
+  :root:tab-focus        { outline:@STD-OUTLINE-FOCUS; }  
+
+  :root > caption 
+  { 
+    display:block;
+    height:*; 
+    width:9ch;
+    flow:text;
+    behavior: edit;      
+    cursor:text;
+    white-space:pre;
+    overflow-x:hidden-scroll;
+    line-height:1.4em;
+    padding:0.2em 0 0.2em 0.4ch;
+    border:1px solid color(widget-border);
+    //border-radius: 0 length(border-radius) length(border-radius) 0;
+  }
+
+  :root[alpha] > caption {
+    width:10.5ch;
+  }
+
+  :root:rtl > caption {
+    //border-radius: length(border-radius) 0 0 length(border-radius);
+    padding:0.2em 0.4ch 0.2em 0;
+  }
+
+  :root:disabled > caption { color:color(widget-disabled-text); }  
+
+  :root > span {
+    behavior:clickable;
+    display:block;
+    height:*;
+    padding:0;
+    width:1.4em;
+    background:color(button-face);
+    border:1px solid color(widget-border);
+    border-radius: length(border-radius) 0 0 length(border-radius);
+  }
+
+  :root > button
+  {
+    behavior:clickable;
+    display:block;
+    height:*;
+    padding:0;
+    width:1.4em;
+    background:color(button-face);
+    border:1px solid color(widget-border);
+    border-radius: 0 length(border-radius) length(border-radius) 0;    
+    foreground-image: icon(down); /* that arrow */
+    foreground-position: 50% 50%;
+    foreground-size:10px;
+  }
+  :root:rtl > button
+  {
+    border-radius: length(border-radius) 0 0 length(border-radius);    
+  }
+    
+  :root > button:hover    { transition:none; background:color(button-hover); }
+  :root > button:active   { background:color(button-hover); }
+  :root > button:disabled { background-color: color(widget-disabled); color: color(widget-disabled-text); fill: color(widget-disabled-text); }
+
+  :root[embedded] > span {
+    width:*;    
+  }
+  
+  @media dropdown-animation-supported {
+    :root { popup-animation: popup-animation(type:blend,duration:100ms); }
+  }
+
+}
+
+
+input[type="color"] { 
+  prototype: ColorInput url(color-selector.js); 
+  style-set:color-input; 
+  content-isolate:isolate;
+}

@@ -1,0 +1,2259 @@
+@import url(master-base.css);
+@import url(sciter:color-selector.css);
+
+html,[theme] {
+  var(panel): #f9f9fa;
+  var(panel-text): #353535;
+
+  var(document): #fff;
+  var(document-text): #000;
+
+  var(accent): window-accent-color;
+  var(accent-lite): morph(color(accent),lightness:90%);
+  var(accent-dark): morph(color(accent),darken:30%);
+
+  var(widget-back): #fff;
+  var(widget-text): #000;
+  var(widget-border): #cecece;
+  var(button-face): #ebebeb;
+  var(button-pressed): #f5f5f5;
+  var(button-pressed-alt): #d9d9d9;
+  var(button-text): #000;
+  var(button-text-alt): #fff;
+  var(button-hover): color(accent-lite);
+  var(widget-disabled): #e8e8e8;
+  var(widget-disabled-text): #aaa;
+
+  var(button-scrollbar): #f5f7fa;
+  var(slider-scrollbar): #c8c9cc;
+  var(slider-scrollbar-hover): #8c8c95;
+
+  var(info-back): #ffffe4;
+
+  var(border-radius): 4px;
+  
+  var(highlight): morph(color(accent),lightness:90%);
+  var(highlight-nf): hsl(0,0%,90%);
+  var(highlight-focus): morph(color(accent),saturation:90%,lightness:90%);
+  var(highlight-text): #000;
+  var(highlight-hover): morph(color(accent),saturation:80%,lightness:75%, opacity:30%);
+
+  var(selection): color(accent);
+  var(selection-text): #fff;
+  var(selection-nf): #ddd;
+  var(selection-nf-text): #000;
+
+  var(danger-color) : #db3737; // red
+  var(success-color): #0f9960; // green
+  var(warning-color): #fcb000; //gold? 
+
+  var(hyperlink): blue;
+
+  background: var(document,#fff);
+  color: var(document-text,#000);
+  text-selection-caret-color: #000;
+}
+
+html:theme(dark), [theme]:theme(dark) {
+  var(panel): #353535;
+  var(panel-text): #eee;
+
+  var(document): #000;
+  var(document-text): #fff;
+
+  var(accent): morph(window-accent-color,lightness:35%);  
+  var(accent-lite): morph(color(accent),lightness:90%);
+  var(accent-dark): morph(color(accent),darken:50%);
+
+  var(widget-back): #000;
+  var(widget-text): #fff;
+  var(widget-border): #63636c;
+
+  var(button-face): #57575e; 
+  var(button-pressed): #2f2f33; 
+  var(button-pressed-alt): #dfe1e4; 
+  var(button-text): #fff;
+  var(button-text-alt): #fff;
+  var(button-hover): morph(color(accent),darken:10%);
+
+  var(widget-disabled): #4e4e4e;
+  var(widget-disabled-text): #aaa;
+
+  var(button-scrollbar): #2f2f33;
+  var(slider-scrollbar): #74747a;
+  var(slider-scrollbar-hover): #b1b1b6;
+
+  var(info-back): #8b4513;
+
+  var(highlight): morph(color(accent),darkness:90%);
+  var(highlight-nf): hsl(0,0,35%);
+  var(highlight-focus): morph(color(accent), lightness:35%);  //morph(color(accent),darkness:70%);
+  var(highlight-text): #fff;
+  var(highlight-hover): morph(color(accent), lightness:70%, saturation:100%, opacity:35%);
+
+  var(selection): color(accent);
+  var(selection-text): #fff;
+  var(selection-nf): #666;
+  var(selection-nf-text): #fff;
+
+  var(danger-color) : #8c2222; // red
+  var(success-color): #085636; // green
+  var(warning-color): #fca100; //gold? 
+
+  var(hyperlink): lightblue;
+
+  //background: var(document,#fff);
+  //color: var(document-text,#000);
+  text-selection-caret-color: #FFF;
+}
+
+:window-root
+{
+  background: var(document,#fff);
+  color: var(document-text,#000);
+}
+
+:window-root:blur-behind { background-color: window-system-background; }
+
+@const WINDOW_BORDER_RADIUS: 8px;
+@const WIDGET_BORDER_RADIUS: 4px;
+
+@if (window-shape == "round") { 
+  @mixin POPUP_SHAPE {
+    margin:@WIDGET_BORDER_RADIUS 0;
+    padding:@WINDOW_BORDER_RADIUS;
+    border: none; 
+  }
+  @mixin POPUP_LIST_SHAPE {
+    margin:@WIDGET_BORDER_RADIUS 0;
+    padding:@WINDOW_BORDER_RADIUS 0;
+    border: none; 
+    box-sizing:content-box;
+    overflow-y:scroll-indicator;
+  }
+  @mixin POPUP_ITEM_SHAPE {
+    border-radius: @WIDGET_BORDER_RADIUS;
+  }
+} @else { 
+  @mixin POPUP_SHAPE {
+    margin:0;
+    padding:0; 
+    border: 1px solid color(widget-border); 
+  }
+  @mixin POPUP_LIST_SHAPE {
+    margin:0;
+    padding:0; 
+    border: 1px solid color(widget-border); 
+    overflow-y:auto;
+  }
+  @mixin POPUP_ITEM_SHAPE {
+    border-radius: 0;
+  }
+}
+
+
+a:link { color:var(hyperlink); }
+
+@mixin STD-BUTTON-NORMAL 
+{
+  color:color(button-text);
+  fill:color(button-text);
+  background: linear-gradient(to bottom, morph(color(button-face),lighten:1%), 
+                                         morph(color(button-face),lighten:3%) 20%, 
+                                         color(button-face) 40%, 
+                                         color(button-face) 85%, 
+                                         morph(color(button-face),darken:5%) );
+  border:1dip solid color(widget-border);
+  border-radius: length(border-radius);
+}
+
+@mixin STD-BUTTON-HOVER {
+  background: linear-gradient(to bottom, morph(color(button-face),lighten:3%), 
+                                         morph(color(button-face),lighten:5%) 20%, 
+                                         color(button-face) 40%, 
+                                         color(button-face) 85%, 
+                                         morph(color(button-face),darken:9%) );
+}
+
+@mixin STD-BUTTON-PRESSED {
+  background: color(button-face);
+}
+
+@mixin STD-BUTTON-FOCUS {
+ border-color:color(accent);
+}  
+
+@const STD-OUTLINE-FOCUS: 3dip solid color(accent-lite) 0dip;
+
+@mixin STD-BUTTON-TAB-FOCUS {
+  outline:@STD-OUTLINE-FOCUS;
+} 
+
+@mixin STD-BUTTON-DISABLED {
+  background-color: color(widget-disabled);
+  background-gradient:none;
+  color: color(widget-disabled-text);
+  fill: color(widget-disabled-text);
+}
+
+@mixin STD-BUTTON-DEFAULT {
+  background: color(accent);
+}
+
+//@mixin STD-BUTTON-CANCEL {
+//  background: color(accent);
+//}
+
+
+@mixin STD-OPTION-NORMAL { border-radius: 2dip; }
+//@mixin STD-OPTION-HOVER { background-color:morph(color(accent),lightness:90%, saturation:100%); }
+@mixin STD-OPTION-HOVER { foreground-color: color(highlight-hover) ; }
+@mixin STD-OPTION-CURRENT { background-color:color(highlight-nf); }
+@mixin STD-OPTION-PRESSED { background-color: color(highlight-focus); }
+@mixin STD-OPTION-FOCUS { background-color: color(highlight-focus); }
+
+@mixin STD-MENU-ITEM-HOVER { 
+  foreground-color: color(highlight-hover); 
+  color: color(highlight-text);
+  fill: color(highlight-text);
+}
+
+@mixin STD-TB-BUTTON-NORMAL {
+  foreground:none; 
+  border-radius:2dip;
+  foreground-clip:padding-box;  
+}
+@mixin STD-TB-BUTTON-HOVER {
+  foreground-gradient: linear-gradient(to bottom, rgba(255,255,255,30%), rgba(96,96,96,15%));
+  box-shadow: inset -1dip -1dip 1dip rgba(0,0,0,60%), inset 1dip 1dip 3dip rgb(255,255,255);
+  outline:1px solid rgba(0,0,0,40%) -1px;
+}
+
+@mixin STD-TB-BUTTON-HOVER-DARK {
+  foreground-gradient: linear-gradient(to bottom, rgba(255,255,255,40%), rgba(96,96,96,15%));
+  box-shadow: inset -1dip -1dip 1dip rgb(0,0,0), inset 1dip 1dip 1dip rgba(255,255,255,60%);
+  outline:1dip solid rgba(0,0,0,40%) -1dip;
+}
+
+@mixin STD-TB-BUTTON-PRESSED {
+  foreground-gradient: rgba(196,196,196,20%);
+  box-shadow: inset 1dip 1dip 2dip rgba(0,0,0,50%);
+  outline:1px solid rgba(128,128,128,25%) -1px;
+}
+
+@mixin STD-TB-BUTTON-CHECKED {
+  background: rgba(196,196,196,20%);
+  box-shadow: inset 1dip 1dip 2dip rgba(0,0,0,50%);
+  outline:1px solid rgba(0,0,0,25%) -1px;
+}
+
+@const STD-CHECK-NO : url(path:M1312 256h-832q-66 0-113 47t-47 113v832q0 66 47 113t113 47h832q66 0 113-47t47-113v-832q0-66-47-113t-113-47zm288 160v832q0 119-84.5 203.5t-203.5 84.5h-832q-119 0-203.5-84.5t-84.5-203.5v-832q0-119 84.5-203.5t203.5-84.5h832q119 0 203.5 84.5t84.5 203.5z);
+@const STD-CHECK-YES : url(path:M813 1299l614-614q19-19 19-45t-19-45l-102-102q-19-19-45-19t-45 19l-467 467-211-211q-19-19-45-19t-45 19l-102 102q-19 19-19 45t19 45l358 358q19 19 45 19t45-19zm851-883v960q0 119-84.5 203.5t-203.5 84.5h-960q-119 0-203.5-84.5t-84.5-203.5v-960q0-119 84.5-203.5t203.5-84.5h960q119 0 203.5 84.5t84.5 203.5z);
+@const STD-CHECK-MANY : url(path:M1344 800v64q0 14-9 23t-23 9h-832q-14 0-23-9t-9-23v-64q0-14 9-23t23-9h832q14 0 23 9t9 23zm128 448v-832q0-66-47-113t-113-47h-832q-66 0-113 47t-47 113v832q0 66 47 113t113 47h832q66 0 113-47t47-113zm128-832v832q0 119-84.5 203.5t-203.5 84.5h-832q-119 0-203.5-84.5t-84.5-203.5v-832q0-119 84.5-203.5t203.5-84.5h832q119 0 203.5 84.5t84.5 203.5z);
+@const STD-CHECK-SIZE: 11dip 11dip;
+@const STD-CHECK-YES-SIZE: 11dip 11dip;
+
+@set std-fieldset < std-fieldset-base {
+  :root 
+  {
+    //background-color:color(widget-back);
+    border:1px solid color(widget-border);
+    border-radius: length(border-radius);
+    padding:0em 1em 0.5em 1em;
+    max-width: max-content;
+    hit-margin:1.2em 0 0 0;
+  }
+  :root  > legend 
+  {
+    background-color:color(widget-back); 
+    padding: 2px 4px;
+    margin-top:-1.2em;
+    width: max-content;
+    margin-inline-start:0;
+    margin-inline-end:*;
+  }
+
+}
+
+
+@set std-edit < std-edit-base
+{
+  :root {
+    font:system;
+    font-size: inherit;
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+
+    border-radius: length(border-radius);
+    padding:0.2em 0.4em;
+  }
+  
+  :root:owns-popup,
+  :root:focus            {  text-selection: color(selection-text) color(selection); }
+  :root:disabled         {  background:color(widget-disabled);  color:color(widget-disabled-text); }
+  :root:tab-focus        {  outline:@STD-OUTLINE-FOCUS; } 
+  :root:empty            {  color:color(widget-disabled-text); }
+
+  :root[nullable] {
+    padding-right: 1.2em;
+    foreground-position: top 50% right 0.5em;
+    foreground-repeat: no-repeat;
+    foreground-image-cursor: pointer;
+    foreground-size: 0.5em;
+    fill:currentcolor;
+    stroke:none;
+    box-sizing: content-box;
+  }
+  :root[nullable]:not(:empty) {
+    foreground-image: url(stock:cross-x);
+  }
+
+}
+
+@set std-number-edit < std-number-edit-base
+{
+  :root
+  {
+    font:system;
+    font-size: inherit;
+    color: color(widget-text);
+    background: color(widget-back);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    padding:0;
+    height:min-content;
+    border-radius: length(border-radius); 
+    border:1dip solid color(widget-border);
+    overflow:hidden;
+  }
+
+  :root:owns-popup,
+  :root:focus            { text-selection: color(selection-text) color(selection); }
+  :root:disabled         { background:color(widget-disabled); color:color(widget-disabled-text); }  
+  :root:tab-focus        { outline:@STD-OUTLINE-FOCUS; }  
+
+  :root > caption 
+  { 
+    //width:*;
+    line-height:1.4em;
+    height:1.4em;
+    padding:0.2em 0 0.2em 0.4em;
+    //border:1dip solid color(widget-border);
+    //border-radius: length(border-radius) 0 0 length(border-radius);
+    min-width: 1em;
+  }
+
+  :root:rtl > caption {
+    padding:0.2em 0.4em 0.2em 0;
+    //border-radius: 0 length(border-radius) length(border-radius) 0;
+  }
+
+  :root:disabled > caption { color:color(widget-disabled-text); }  
+  
+  :root:not(:has-children-of-type(button)) > caption { border-radius: length(border-radius); }
+
+  :root > button
+  {
+    height:0.5*;
+    min-height:5dip;
+    width:1.2em;
+    background:color(button-face);
+    border:1px none color(widget-border);
+    foreground-position:50% 50%;
+    foreground-size:5dip;
+    foreground-repeat:no-repeat;
+    border-radius:0;
+  }
+
+  :root > button:hover
+  {
+    transition:none;
+    background:color(button-hover);
+  }
+  :root > button:active
+  {
+    background:color(button-hover);
+  }
+  :root:disabled > button
+  {
+    background: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+  
+  :root > button.minus
+  {
+    padding:0;
+    border-left-style: solid;
+    foreground-image: url(stock:chevron-down); 
+  }
+
+  :root:rtl > button.minus {
+    border-left-style: solid;
+    border-right-style: none;
+  }
+ 
+  :root > button.plus
+  {
+    padding:0;
+    border-bottom-style: solid;
+    border-left-style: solid;
+    foreground-image: url(stock:chevron-up); 
+  }
+
+  :root:rtl > button.plus {
+    border-left-style: solid;
+    border-right-style: none;
+  }
+
+}
+
+
+/* text button */
+
+@set std-button < std-button-base
+{
+  :root
+  { 
+    font:system;
+    font-size: inherit;
+    padding:0 1em; 
+    height:2em;
+    line-height:height(100%);
+    white-space: nowrap;
+    @STD-BUTTON-NORMAL;
+  }
+      
+  :root:hover                   { @STD-BUTTON-HOVER; }
+  :root:focus                   { @STD-BUTTON-FOCUS; }
+  :root:active                  { @STD-BUTTON-PRESSED; }
+  :root:tab-focus               { @STD-BUTTON-TAB-FOCUS; }
+
+  :root:not(:disabled).primary,
+  :root:not(:disabled)[role="default-button"] {
+    var(button-face): color(accent);
+    color:color(button-text-alt);
+    fill:color(button-text-alt);
+    border-color:morph(color(accent),darken:20%);
+  }
+
+  :root.primary:active,  
+  :root[role="default-button"]:active {
+    background: color(accent);
+  }
+
+  :root.danger {
+    var(button-face): color(danger-color);
+    color:color(button-text-alt);
+    border-color:morph(color(danger-color),darken:20%);
+  }
+
+  :root.success {
+    var(button-face): color(success-color);
+    color:color(button-text-alt);
+    border-color:morph(color(success-color),darken:20%);
+  }
+
+  :root.warning {
+    var(button-face): color(warning-color);
+    color:color(button-text);
+    border-color:morph(color(warning-color),darken:20%);
+  }
+
+  :root:disabled                { @STD-BUTTON-DISABLED; }
+}
+
+toolbar > splitter {
+  width:1px;
+  height:*;
+  margin:0 2px;
+  background:color(widget-border);
+}
+ 
+@set std-toolbar-button < std-toolbar-button-base
+{
+  :root
+  { 
+    font:system;
+    font-size: inherit;
+    color: color(button-text);
+    padding:4dip; 
+    @STD-TB-BUTTON-NORMAL;
+  }
+  :root:hover             { @STD-TB-BUTTON-HOVER; transition:none; }
+
+  :root:active        { @STD-TB-BUTTON-PRESSED; }
+  :root:checked       { @STD-TB-BUTTON-CHECKED; }
+  :root:disabled      { background:none; foreground:none; color:color(widget-disabled-text); }
+}
+
+@set std-toolbar-button-menu < std-toolbar-button
+{
+  :root
+  {
+    behavior:clickable popup-menu; 
+    background-image:url(stock:chevron-down);
+    background-size:5dip;
+    background-repeat: no-repeat;
+    background-position-right: 2dip;
+    background-position-bottom: 2dip;
+  }
+  :root > menu {
+    visibility:none;
+  }
+  :root:owns-popup /* button when popup is shown */
+  {
+    @STD-TB-BUTTON-PRESSED;
+  }
+}
+
+@set std-button-menu < std-button
+{
+  :root
+  {
+    behavior:button popup-menu; 
+    width:max-content;
+  }
+  :root > menu {
+    visibility:none;
+  }
+  :root:owns-popup /* button when popup is shown */
+  {
+    @STD-BUTTON-PRESSED;
+  }
+}
+
+
+@const SMALL-ICON-SIZE:15dip;
+
+/* radio button */
+@set std-radio < std-radio-base
+{
+    input:root
+    { 
+      padding:0px; 
+      height:@SMALL-ICON-SIZE; 
+      width:@SMALL-ICON-SIZE; 
+      vertical-align:middle;
+    }
+
+    :root:not(input) 
+    {
+      white-space:nowrap;
+      line-height:1.4em;
+      height:1.4em;      
+      padding:0.25em 0.25em 0.25em 20dip;
+      width:max-content;
+    }
+
+    :root:not(input):rtl {
+      padding:0.25em 20dip 0.25em 0.25em;
+    }
+
+    :root::marker {
+      size:12dip;
+      margin:*;
+      background: no-repeat 50% 50%;
+      background-color: color(widget-back);
+      border:1dip solid color(widget-text);
+      border-radius:7dip;
+    }
+
+    :root:not(input)::marker { margin:* * * 3dip; }
+    :root:not(input)::marker:rtl { margin:* 3dip * *; }
+
+    :root:active::marker { background-color: color(button-hover); }
+
+    :root:checked::marker {
+      background-image: url(path:M1664 896q0 209-103 385.5t-279.5 279.5-385.5 103-385.5-103-279.5-279.5-103-385.5 103-385.5 279.5-279.5 385.5-103 385.5 103 279.5 279.5 103 385.5z);
+      background-size:7dip;
+      fill:color(accent);
+      border-color: color(accent);
+    }
+
+    :root:hover::marker {
+      border-color: color(highlight);
+    }
+
+    :root:disabled::marker {
+      background-color: color(widget-disabled);
+      color: color(widget-disabled-text);
+      fill: color(widget-disabled-text);
+      //fill:color(widget-border);
+    }
+
+    :root:tab-focus { 
+      border-radius: length(border-radius);
+      outline:2dip solid color(button-hover) 0dip;
+    }    
+
+}
+
+
+/* checkbox button */
+@set std-checkbox < std-checkbox-base
+{
+    :root
+    {
+      height:@SMALL-ICON-SIZE; 
+      width:@SMALL-ICON-SIZE; 
+      vertical-align:middle;
+    }
+
+    :root:not(input)
+    {
+      white-space:nowrap;
+      line-height:1.4em;
+      padding:0.25em 0.25em 0.25em 20dip;
+      width:max-content;
+      height:1.4em;
+    }
+
+    :root:not(input):rtl {
+      padding:0.25em 20dip 0.25em 0.25em;
+    } 
+
+    :root::marker {
+      size:12dip;
+      margin:*;
+      background: color(widget-back) no-repeat 50% 50%;
+      border:1dip solid color(widget-border);
+      border-radius:2dip;
+      stroke:none;
+      stroke-width:0;
+    }
+
+    :root:not(input)::marker { margin:* * * 2dip; }
+    :root:not(input)::marker:rtl { margin:* 2dip * *; }
+
+    :root:active::marker { background-color: color(button-hover); }
+
+    :root:checked::marker {
+      background-image: url(path:M1671 566q0 40-28 68l-724 724-136 136q-28 28-68 28t-68-28l-136-136-362-362q-28-28-28-68t28-68l136-136q28-28 68-28t68 28l294 295 656-657q28-28 68-28t68 28l136 136q28 28 28 68z);
+      background-size:9dip;
+      background-color: color(accent);
+      //border-color:color(accent);
+      fill:color(widget-back);
+    }
+
+    :root:checked:theme(dark)::marker {
+      background-color: color(widget-back);
+      fill:color(widget-text); 
+    }
+
+    :root[mixed]:empty::marker {
+      background-image: url(path:M1664 416v960q0 119-84.5 203.5t-203.5 84.5h-960q-119 0-203.5-84.5t-84.5-203.5v-960q0-119 84.5-203.5t203.5-84.5h960q119 0 203.5 84.5t84.5 203.5z);
+      background-size:6dip;
+      fill:color(widget-text);
+    }
+
+    :root:hover::marker {
+      border-color: color(highlight);
+    }          
+
+    :root:disabled::marker {
+      background-color: color(widget-disabled);
+      color: color(widget-disabled-text);
+      fill: color(widget-disabled-text);
+    }
+
+    :root:tab-focus { 
+      border-radius: length(border-radius);
+      outline:2dip solid color(button-hover) 0dip;
+    }
+
+}
+
+@set std-popup < std-popup-base
+{
+  :root { @POPUP_SHAPE; }
+
+  :root[role="overflow-tooltip"],
+  :root[role="overflow-multiline-tooltip"]
+  { 
+    background-color: color(info-back);
+    color: color(widget-text);
+  }
+  :root[role="tooltip"] 
+  {
+    font: system;
+    background-color: color(info-back);
+    border:1dip solid color(widget-border);
+    color: color(widget-text);
+    padding:2dip 4dip; 
+  }
+
+  @media (tooltip-animation-supported) {
+    :root[role="tooltip"],
+    :root[role="overflow-tooltip"],
+    :root[role="overflow-multiline-tooltip"]
+    {
+        popup-animation: popup-animation(type:blend,duration:100ms);
+    }
+  }
+
+
+}
+
+@set std-selector < std-button
+  {
+    :root
+    { 
+      text-align:center;
+      padding:4dip 14dip 4dip 8dip; /* + room for the arrow */
+      behavior:button popup-selector;
+      foreground-image:url(stock:chevron-down); /* that arrow */
+      foreground-repeat: no-repeat;
+      foreground-position-top: 50%;
+      foreground-position-right: 3px;
+      overflow: hidden;
+      height:min-intrinsic;
+    }
+    
+    :root > caption { margin-top:*; margin-bottom:*; }    
+   
+    /*:root:active > caption
+    { 
+      position:relative;
+      left:1px;
+      top:1px;
+    }*/
+    :root > menu,
+    :root > popup
+    { 
+      master-style-set: "std-popup-menu";
+      display:block; 
+      visibility:collapse;/* invisible normally */
+      border:none;
+      min-width: max-intrinsic;
+      width: *;
+      height: max-intrinsic;
+      transition:window-slide-ttb;
+    }
+    :root > menu:popup,
+    :root > popup:popup
+    {
+      visibility:visible;/* visible when popup */
+    }
+
+  }
+
+  @keyframes std-progress-slide {
+    from { background-position-left: 0%; }
+    to { background-position-left: 100%; }
+  } 
+
+  @set std-progress < std-progress-base
+  {
+    :root {
+      color: color(button-text);
+      background: color(button-face);
+      border:1dip solid color(widget-border);
+      border-radius: 0.4em;
+      height:0.6em;
+      width:8em;
+      padding:0;
+      vertical-align:middle;
+      overflow:hidden;
+    }
+    :root:not(:busy)::marker {
+      width:length(progress-percent);
+      height: *;
+      background: color(accent);
+      z-index:0; // marker is drawn as part of background
+    }
+
+    :root:busy::marker {
+
+      width:*;
+      height:*;
+      background-repeat: no-repeat;
+      background-image: url(path: M 0 0 L 9 0 L 9 9 L 0 9 Z);
+      background-size: 25% 100%;
+      fill: color(accent);
+      stroke:none;
+      stroke-width:0;
+      animation: 1.2s infinite alternate std-progress-slide;
+      z-index:0; // marker is drawn as part of background
+    }
+
+  }
+
+  @set std-meter < std-meter-base
+  {
+    :root {
+      color: color(button-text);
+      background: color(button-face);
+      border:1dip solid color(widget-border);
+      border-radius: height(50%);
+      height:0.6em;
+      width:8em;
+      padding:0;
+      vertical-align:middle;
+      overflow:hidden;
+    }
+    :root:not(:busy)::marker {
+      width:var(progress-percent);
+      height: *;
+      background: color(accent);
+      z-index:0; // marker is drawn as part of background
+    }
+
+    :root:busy::marker {
+      width:*;
+      height:*;
+      background-repeat: no-repeat;
+      background-image: url(path: M 0 0 L 9 0 L 9 9 L 0 9 Z);
+      background-size: 25% 100%;
+      fill: color(accent);
+      stroke:none;
+      stroke-width:0;
+      animation: 1.2s infinite alternate std-progress-slide;
+      z-index:0; // marker is drawn as part of background
+    }
+  }
+
+
+@set std-select < std-select-base
+{
+  :root
+  { 
+    font:system;
+    font-size: inherit;
+    padding:1dip; 
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+  }
+  
+  :root:disabled
+  { 
+    background-color: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+
+  option 
+  { 
+    padding:0 2dip; 
+    line-height: 1.6em;
+    min-height:1.6em;
+    color: color(widget-text);
+  }
+  
+  option:checked:not(:has-children-of-type(option)),
+  option:current:not(:has-children-of-type(option)) { 
+    background-color: color(highlight-nf);  
+    color:color(highlight-text);
+  }
+
+  option:disabled {
+    color: color(widget-disabled-text);
+  }
+
+  :root:focus option:current:not(:has-children-of-type(option)),
+  popup:root option:current:not(:has-children-of-type(option)) 
+  { 
+    background-color: color(highlight-focus);
+    color:color(highlight-text); 
+  }
+
+  optgroup > caption 
+  { 
+    padding:1dip 3dip; 
+    font-weight:bold; 
+    color:color(widget-disabled-text);
+  }
+  optgroup > option 
+  { 
+    padding-left:20dip; 
+  }
+  optgroup > option:rtl
+  { 
+    padding-right:20dip; 
+    padding-left:1dip; 
+  }
+}
+
+@set std-select-checkmarks < std-select-base
+{
+  :root
+  { 
+    font:system;
+    font-size: inherit;
+    padding:1dip; 
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    //flow:vertical;
+    //height:1.2em;
+  }
+  
+  :root:disabled
+  { 
+    background-color: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+
+  option { 
+    color: color(widget-text);
+    line-height: 1.6em;
+    min-height:1.6em;
+    width:*;
+    padding-left:20dip; 
+    padding-right:2dip;    
+    foreground-image: url(icon:box);
+    foreground-size: 1em;
+    foreground-repeat: no-repeat;
+    foreground-position: 3px 50%;
+    foreground-image-cursor: pointer;
+    fill: color(widget-text); 
+  }
+  option:rtl 
+  { 
+    padding-left:2dip; 
+    padding-right:20dip;
+    foreground-position-right: 3dip;
+    foreground-position-left: auto;    
+  }
+
+  option:checked { foreground-image: url(icon:box-tick); }
+
+  option:current {
+    fill: color(highlight-text);
+    background-color: color(highlight-nf);  
+    color:color(highlight-text);
+  }
+
+  :root:focus option:current,
+  popup:root option:current
+  { 
+    background-color: color(highlight-focus);
+    color:color(highlight-text); 
+  }
+
+  option:incomplete  { foreground-image: @STD-CHECK-MANY; foreground-size: @STD-CHECK-SIZE;  }
+
+  option:disabled { color: gray; }
+
+}
+
+/* simple multiselect (without check boxes) */
+@set std-select-multiple < std-select
+{
+  option
+  {
+    background-color:transparent; color: color(widget-text);
+  }
+  option:checked
+  {
+    background-color: color(highlight-nf);
+    color:color(highlight-text); 
+  }
+  :root:focus option:checked
+  {
+    background-color: color(highlight-focus);
+    color:color(highlight-text); 
+  }
+} 
+
+@set std-select-multiple-checkmarks < std-select
+{
+  option
+  {
+    padding-left: 1.6em; 
+    background-color:transparent; 
+    foreground-repeat:no-repeat;
+    foreground-position: left 0.2em top 50%;
+    foreground-size: 1.2em;
+    foreground-image: url(icon:box);
+    fill: currentcolor;
+    color: color(widget-text);    
+  }
+  option:checked
+  {
+    foreground-image: url(icon:box-tick); 
+    background-color:transparent; 
+  }
+  option:disabled {
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+
+  option:rtl
+  {
+    padding-left: 1dip; 
+    padding-right: 1.6em; 
+    foreground-position: right 0.2em top 50%;
+  }
+}
+
+
+@set std-select-switch < std-select-switch-base
+{
+  :root { 
+    padding:0; 
+    border:1dip solid color(widget-border);
+    background: color(widget-border);
+    border-radius: length(border-radius);
+    border-spacing:1dip;
+  }
+  :root:focus { border-color:color(accent); }
+  :root:tab-focus { outline:2dip solid color(button-hover) 0dip; }
+
+  option 
+  { 
+    @STD-BUTTON-NORMAL;
+    height: 1.8em;
+    line-height:height(100%);
+    padding:0 0.5em;
+    border-radius:0;
+    border:none;
+  }
+
+  option:first-child { border-radius: length(border-radius) 0 0 length(border-radius); }
+  option:last-child { border-radius: 0 length(border-radius) length(border-radius) 0; }
+
+  option:hover { @STD-BUTTON-HOVER; }
+  option:active { @STD-BUTTON-PRESSED; }
+  option:current { background: color(selection); color: color(selection-text); }
+}
+
+@set std-tree < std-tree-base
+{
+  :root
+  { 
+    font:system;
+    font-size: inherit;
+    padding:1dip; 
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+  }
+
+  :root:disabled
+  { 
+    background-color: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+
+  option {
+    line-height: 1.6em;
+    min-height:1.6em;
+  }
+  
+/*  option:hover:not(:has-children-of-type(option))     { background: @STD-OPTION-BG-HOVER; }
+  option:checked:not(:has-children-of-type(option)),
+  option:current:not(:has-children-of-type(option))   { background: @STD-OPTION-BG-CURRENT; }
+  :root:focus option:current:not(:has-children-of-type(option)),
+  popup:root option:current:not(:has-children-of-type(option)) { background: @STD-OPTION-BG-FOCUS; }   */
+
+  option:not(:node),
+  option:node > caption   { 
+    @STD-OPTION-NORMAL; 
+  }
+  
+  option:not(:node):hover,
+  option:node > text:hover,
+  option:node > caption:hover   { 
+    @STD-OPTION-HOVER; 
+  }
+  
+  /* :current hightlighting */
+  option:not(:node):current,
+  option:node:current > text,
+  option:node:current > caption { @STD-OPTION-CURRENT; }
+  
+  :root:focus option:not(:node):current,
+  :root:focus option:node:current > text,
+  :root:focus option:node:current > caption { @STD-OPTION-FOCUS; }
+  
+  option:not(:node):current:hover,
+  option:node:current > text:hover,
+  option:node:current > caption:hover
+  {
+    @STD-OPTION-HOVER;  
+    //background: url(sciter:list-view-item-selected-hover.png);
+    //background-repeat: expand stretch-left stretch-right stretch-middle;
+    //background-position:4 4 4 4;
+  }
+  
+  
+}    
+
+@set std-tree-checkmarks < std-tree
+{
+    :root { behavior: tree-checkmarks; }
+   
+    
+    option:not(:node),
+    option:node > text,
+    option:node > caption
+    {
+      padding-left:21dip;
+      foreground-image: url(icon:box); foreground-size:1em; fill:color(widget-text);
+      foreground-repeat: no-repeat;
+      foreground-position: 2dip 50%;
+      foreground-image-cursor: pointer;
+    }
+    
+    option:not(:node):rtl,
+    option:node > text:rtl,
+    option:node > caption:rtl
+    {
+      padding-left:2px;
+      padding-right:21dip;
+      foreground-position-right:2d;
+      foreground-position-left:auto;
+    }    
+        
+    option:not(:node):incomplete,
+    option:node:incomplete > text,
+    option:node:incomplete > caption 
+      { foreground-image: url(icon:box-minus-o); }
+      
+    option:not(:node):checked,
+    option:node:checked > text,    
+    option:node:checked > caption
+      { foreground-image: url(icon:box-tick);}      
+}
+
+/*
+@set std-file-selector < std-file-selector-base
+{
+  :root 
+  {
+    padding:0;
+    font:system;
+    flow:horizontal;
+    width:20em;
+    color:color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    border-radius: length(border-radius);
+  }
+  
+  :root:owns-popup,
+  :root:focus            { text-selection: color(selection-text) color(selection); }
+  :root:disabled         { background:color(widget-disabled-face);  color:color(widget-disabled-text); }
+  :root:tab-focus        { outline:@STD-OUTLINE-FOCUS; }    
+  
+  :root > caption
+  {
+    padding:4dip 4dip 4dip system-small-icon-width;
+    foreground-position: 2dip 50%;
+  }
+  :root:empty > caption
+  {
+    color:color(widget-disabled-text);
+  }
+  :root:disabled > caption
+  {
+    color:color(widget-disabled-text);
+  }
+  :root > button
+  {
+    margin:1px;
+    padding:3dip 6dip;
+    width:max-intrinsic;
+    height:*;
+  }
+} */
+
+
+/* dropdown combobox */
+@set std-select-dropdown < std-select-dropdown-base
+  {
+ 
+    :root
+    { 
+      font:system;
+      font-size: inherit;
+      @STD-BUTTON-NORMAL;      
+      padding:0; 
+      white-space: nowrap;
+    }
+
+    @media (dropdown-animation-supported) {
+      :root {
+        popup-animation: popup-animation(type:slide,duration:100ms);
+      }
+    }
+        
+    :root:hover                   { @STD-BUTTON-HOVER; }
+    :root:focus                   { @STD-BUTTON-FOCUS; }
+    :root:owns-popup              { @STD-BUTTON-FOCUS; } 
+    :root:active                  { @STD-BUTTON-PRESSED; }
+    :root:disabled                { @STD-BUTTON-DISABLED; }
+    :root:tab-focus               { @STD-BUTTON-TAB-FOCUS; }  
+  
+    /* caption portion of combobox */
+    :root > caption
+    { 
+      padding:0.25em 0.5em 0.25em 0.5em;
+      //min-width : 2em;
+      color:inherit; 
+      height:1.4em;
+      line-height:1.4em;
+    }
+    
+    /* popup select element */
+    :root > popup.list
+    { 
+      @POPUP_LIST_SHAPE;
+    }
+    
+    option { line-height:1.4em; padding: 1dip 0.5em; }
+    /*:root:not([multiple]) > popup > option { padding: 0 4dip; }*/
+    option:current
+    {
+      background-color:color(selection); color:color(selection-text); fill:color(selection-text);
+    }
+    
+    optgroup > caption 
+    { 
+      padding:1dip 3dip; 
+      font-weight:bold; 
+      color:color(widget-disabled-text);
+    }
+    optgroup > option 
+    { 
+      padding-left:20dip; 
+    }
+    optgroup > option:rtl
+    { 
+      padding-right:20dip; 
+      padding-left:1dip; 
+    }
+    
+    
+    
+    /* dropdown button of the combobox */
+    :root > button
+    {
+      display :block; 
+      width   :1.4em;
+      height  :*;
+      padding :0; 
+      background:transparent; 
+      border:none;
+      foreground-image: icon(down); /* that arrow */
+      foreground-position: 50% 50%;
+      foreground-size:10px;
+    }
+
+    :root:disabled > button  { fill:color(widget-disabled-text); }
+    :root:disabled > caption { color:color(widget-disabled-text); }
+    
+    :root[editable] { background:none; border-width:0; border-radius:0; }
+  
+    //:root[editable]:owns-popup,
+    //:root[editable]:focus            {  text-selection: color(selection-text) color(selection); }
+    :root[editable]:disabled         {  background:color(widget-disabled);  color:color(widget-disabled-text); }
+    
+    :root[editable] > caption {
+      padding:0.25em 0.5em 0.25em 0.5em;
+      text-selection: color(selection-nf-text) color(selection-nf);
+      background: color(widget-back);
+      border:1dip solid color(widget-border);
+      border-radius: length(border-radius) 0 0 length(border-radius);
+      height:1.4em;
+      line-height:1.4em;
+    }
+    :root[editable]:rtl > caption {
+      border-radius: 0 length(border-radius) length(border-radius) 0;
+    }
+    
+    :root:owns-popup[editable] > caption,
+    :root[editable] > caption:focus
+    { text-selection: color(selection-text) color(selection); }    
+    
+    :root[editable] > button
+    {
+      background:color(button-face);
+      border:1dip solid color(widget-border);
+      border-left:none;
+      border-radius: 0 length(border-radius) length(border-radius) 0;
+    }
+    :root[editable]:rtl > button
+    {
+      border:1dip solid color(widget-border);
+      border-right:none;
+      border-left:solid;
+      border-radius: length(border-radius) 0 0 length(border-radius);
+    }
+    
+    :root[editable] > button:hover    { transition:none; background:color(button-hover); }
+    :root[editable] > button:active   { background:color(button-hover); }
+    :root[editable] > button:disabled { background-color: color(widget-disabled); color: color(widget-disabled-text); fill: color(widget-disabled-text); }
+  
+    :root[multiple] > popup > option { padding:1dip 1dip 1dip 20dip; }
+    :root:rtl[multiple] > popup > option { padding:1dip 20dip 1dip 1dip; }
+
+    /*:root[multiple] > span.count 
+    {
+      padding:2dip 2dip 4dip 4dip;
+      margin:2dip;
+      border-left:1px threedshadow solid;
+      border-right:1px threedshadow solid;
+    }*/
+   
+  }
+
+
+@set std-select-popup < std-select-popup-base 
+{
+  /* popup select element */
+  :root
+  { 
+    font: system;
+    margin:0;
+    padding:0; 
+    border:1dip solid color(widget-border);
+    background: color(widget-back);
+  }
+  
+  option { line-height:1.4em; padding: 1dip 0.5em; }
+  /*:root:not([multiple]) > popup > option { padding: 0 4dip; }*/
+  option:current
+  {
+    background-color:color(highlight); color:color(highlight-text); fill:color(highlight-text);
+  }
+  
+  optgroup > caption 
+  { 
+    padding:1dip 3dip; 
+    font-weight:bold; 
+    color:color(widget-disabled-text);
+  }
+  optgroup > option 
+  { 
+    padding-left:20dip; 
+  }
+  optgroup > option:rtl
+  { 
+    padding-right:20dip; 
+    padding-left:1dip; 
+  }
+}
+
+@set std-htmlarea < std-htmlarea-base
+{
+  :root 
+  {
+    font: 10pt sans-serif;
+    
+    width:*;
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    padding:0; 
+  }
+  :root:disabled
+  {
+    overflow:hidden; 
+    cursor:default;
+  }
+  
+  :root:focus,
+  :root:owns-popup
+  {
+    text-selection: color(selection-text) color(selection);
+  }
+}
+
+@set std-textarea < std-textarea-base
+{
+  :root 
+  {
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+  }
+  
+  :root:focus,
+  :root:owns-popup
+  {
+    text-selection: color(selection-text) color(selection);
+  }
+
+  :root:disabled
+  {
+    background:color(widget-disabled);  color:color(widget-disabled-text);
+  }
+  textarea:root
+  {
+    width: auto;
+    height: auto;
+  }
+  plaintext:root
+  {
+    size: *;
+  }
+}
+
+@set std-plaintext < std-plaintext-base {
+
+  :root {
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+  }
+
+  :root:owns-popup,
+  :root:focus            
+  {  
+    text-selection: color(selection-text) color(selection); 
+  }
+
+  :root:disabled
+  {
+    background:color(widget-disabled);  color:color(widget-disabled-text);
+  }
+}
+
+@set std-plaintext-numbers < std-plaintext-numbers-base {
+
+  :root {
+    color: color(widget-text);
+    background: color(widget-back);
+    border:1dip solid color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+  }
+
+  :root:owns-popup,
+  :root:focus            
+  {  
+    text-selection: color(selection-text) color(selection); 
+  }
+  :root:disabled
+  {
+    background:color(widget-disabled);  color:color(widget-disabled-text);
+  }
+}
+
+
+@set std-hslider < std-hslider-base
+{
+  :root 
+  {
+    padding:6dip; 
+    width:100dip;
+    height:3dip; 
+    background:color(button-face); 
+    background-clip: content-box;
+    background-image: url(stock:block);
+    background-size: length(slider-position) 11dip;
+    fill: color(accent);
+    stroke-width:0;
+    min-width:50dip;
+  }
+
+  :root[inverted] {
+    background-position: right 0px top 0px;
+  }
+
+  :root > .slider
+  { 
+    @STD-BUTTON-NORMAL;
+    size:11dip;
+    background:color(button-face); 
+    border-radius:7dip;
+    border-color: color(accent);
+  }
+  
+  :root > .slider:hover    { @STD-BUTTON-HOVER; }
+  :root > .slider:active   { @STD-BUTTON-PRESSED; }
+  :root:disabled > { fill: color(widget-border); }
+  :root:disabled > .slider { background: color(widget-back); border-color: color(widget-border); }
+  :root:tab-focus { @STD-BUTTON-TAB-FOCUS; border-radius: length(border-radius); }
+}
+
+@set std-vslider < std-vslider-base
+{
+  :root
+  {
+    display:inline-block;
+    padding:12dip;
+    width:3dip;
+    height:100dip;
+    background: color(accent);
+    background-clip: content-box;
+    background-image: url(stock:block);
+    background-size: 100% length(slider-position) 11dip;
+    fill: color(button-face);
+    stroke-width:0;
+  }
+
+  :root > .slider
+  {
+    @STD-BUTTON-NORMAL;
+    size:11dip;
+    background:color(button-face);
+    border-radius:7dip;
+    border-color: color(accent);
+  }
+
+  :root > .slider:hover    { @STD-BUTTON-HOVER; }
+  :root > .slider:active   { @STD-BUTTON-PRESSED; }
+  :root:disabled > { fill: color(widget-border); }
+  :root:disabled > .slider { background: color(widget-back); border-color: color(widget-border); }
+  :root:tab-focus { @STD-BUTTON-TAB-FOCUS; border-radius: length(border-radius); }
+}
+
+
+@set std-popup-menu < std-popup-menu-base
+{
+  :root, menu
+  {
+    @POPUP_SHAPE;
+    font: system;  
+    color: color(widget-text);
+    margin:0 1px; /* to offset it from parent li */
+  }
+
+  @media (menu-animation-supported) {
+    :root, menu {
+        popup-animation: popup-animation(type:blend,duration:100ms);
+      }
+  }
+
+ 
+  /* menu item in popup menus */
+  menu > option, li 
+  {  
+    color: color(widget-text);
+    @POPUP_ITEM_SHAPE;
+  }
+
+  /* current menu item */
+  menu > option:current,
+  li:current
+  { 
+    @STD-MENU-ITEM-HOVER;
+  }
+  
+  menu > option:disabled, 
+  li:disabled 
+  { 
+     color:color(widget-disabled-text); font-weight: normal; 
+  }
+
+  /* accesskey label (span) */
+  span.accesskey
+  {
+    display:block;
+    width:max-content;
+    margin-left:*; /* spring to attach it to the right */
+    padding-left:1em;
+    color:color(widget-disabled-text);
+  }
+
+  menu > option:current span.accesskey,
+  li:current span.accesskey
+  {
+    color:color(accent);
+  }
+  
+  /* menu separator */
+  menu > hr 
+  {
+    margin:2dip;
+    border:none; 
+    border-bottom:1px solid color(widget-border);
+  }
+  menu > caption
+  {
+    margin:2dip; 
+    color:color(widget-disabled-text);
+  }
+  
+}
+ 
+@set std-calendar < std-calendar-base
+{
+  :root
+  {
+    font:system;
+    font-size: inherit;
+    background: color(widget-back);
+    color: color(widget-text);
+    padding:1px; 
+    border:1px solid color(widget-border);
+    size: 18em 17em;
+  }
+
+  :root[popup] {
+    background: transparent;
+    border:none;
+  }
+
+  table
+  { 
+    padding:2dip;
+  }
+ 
+  caption
+  {
+    line-height:1.8em;
+    font-weight:bold;
+    width:*;
+  }
+  
+  caption > div.month { width:max-content; }
+  caption > div.year  { width:max-content; }
+  
+  div.nav 
+  {
+    width:2em;
+    height:*;
+    padding-top:0.2em;
+    foreground-position:50% 50%;
+    foreground-size:10px;
+    foreground-repeat:no-repeat;
+    fill:var(widget-text);
+  }
+  div.nav:hover  { @STD-OPTION-HOVER; }
+  div.nav:active { @STD-OPTION-PRESSED; }
+
+  div.nav.prev       { foreground-image: icon(left); }
+  div.nav.next       { foreground-image: icon(right); }
+
+  td 
+  {
+    size: *;
+    text-align:center;
+    padding:1dip 6dip;     
+    border:1px solid transparent;
+  }
+     
+  th
+  {
+    font-size:8pt; 
+    font-weight:normal;
+    color:color(accent);
+    text-align:center;
+    padding-top:4dip;
+    border-bottom:1px solid color(widget-border);
+  }
+
+  td.month.off, td.day.off
+  {
+    color: brown;
+  }
+  td.day.other-month,
+  td.year.other-year,
+  td.decade.other-decade
+  {
+    color: color(widget-disabled-text);
+  }
+
+  td.today
+  {
+    border-color:color(accent);
+    border-radius:3px;
+  }
+  
+  td:current { @STD-OPTION-CURRENT; }
+  td:hover   { @STD-OPTION-HOVER; }
+ 
+  :root:current td.month:current,
+  :root:focus td.month:current,
+  :root:current td.day:current,
+  :root:focus td.day:current,
+  :root:current td.year:current,
+  :root:focus td.year:current,
+  :root:current td.decade:current,
+  :root:focus td.decade:current   
+  {
+    @STD-OPTION-FOCUS;
+  }
+  td:active { @STD-OPTION-PRESSED; }
+
+  div.button
+  {
+    display:block;
+    padding:* 4dip;
+    text-align:center;
+    height:*;
+  }
+ 
+  div.button:hover  { @STD-OPTION-HOVER; }
+  div.button:active { @STD-OPTION-PRESSED; }
+  
+  /* these are sensitive to the mouse wheel */
+  //div.button:hover  { background: @STD-TB-BUTTON-BG-HOVER; transition:none; }
+  //div.button:active { background: STD-TB-BUTTON-BG-PRESSED; }
+     
+  footer 
+  {
+    border-top:1px solid color(widget-border);
+    padding:1dip;
+    line-height:1.4em;
+  }
+  
+  footer > label
+  {
+    display:block;
+    size:1.2em;
+    fill:currentcolor;
+    foreground: no-repeat 50% 50%;
+    foreground-image: url(path:M1303 964l-512 512q-10 9-23 9t-23-9l-288-288q-9-10-9-23t9-22l46-46q9-9 22-9t23 9l220 220 444-444q10-9 23-9t22 9l46 46q9 9 9 22t-9 23zm-1175 700h1408v-1024h-1408v1024zm384-1216v-288q0-14-9-23t-23-9h-64q-14 0-23 9t-9 23v288q0 14 9 23t23 9h64q14 0 23-9t9-23zm768 0v-288q0-14-9-23t-23-9h-64q-14 0-23 9t-9 23v288q0 14 9 23t23 9h64q14 0 23-9t9-23zm384-64v1280q0 52-38 90t-90 38h-1408q-52 0-90-38t-38-90v-1280q0-52 38-90t90-38h128v-96q0-66 47-113t113-47h64q66 0 113 47t47 113v96h384v-96q0-66 47-113t113-47h64q66 0 113 47t47 113v96h128q52 0 90 38t38 90z);
+    foreground-size: 1em;
+    stroke:none;
+  } 
+  footer > div.today 
+  {
+    padding:2px 4px;
+  }   
+  
+  footer > div.today:hover  { color:color(accent); @STD-OPTION-HOVER; }
+  footer > div.today:active { @STD-OPTION-PRESSED; }
+  
+} 
+  
+@set std-date < std-date-base
+{
+  :root
+  { 
+    font:system;    
+    font-size: inherit;
+    padding:0;
+    color:color(widget-text);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    background:none;
+  }
+  
+  :root:disabled         {  color:color(widget-disabled-text); }  
+
+  :root:owns-popup,
+  :root:focus            {  text-selection: color(selection-text) color(selection); }
+  
+  :root:tab-focus        { outline:@STD-OUTLINE-FOCUS; }  
+
+  :root > popup 
+  {
+    @POPUP_SHAPE;
+  }
+    
+  :root > caption {
+    padding:0.2em 0.4em;
+    text-selection: color(selection-nf-text) color(selection-nf);
+    line-height:1.4em;
+    height:1.4em;
+    background: color(widget-back);
+    border:1px solid color(widget-border);
+    border-radius: length(border-radius) 0 0 length(border-radius);
+  }
+  :root:rtl > caption  { border-radius: 0 length(border-radius) length(border-radius) 0; }
+  
+  :root:owns-popup > caption,
+  :root > caption:focus{ text-selection: color(selection-text) color(selection); }
+
+  :root > caption > span:current
+  {
+    background-color: transparent;
+    color: color(widget-text);
+  }
+  :root:owns-popup > caption > span:current,
+  :root:focus > caption > span:current
+  {
+    background-color: color(selection);
+    color: color(selection-text);
+  }    
+
+  :root > button 
+  { 
+    height:*;
+    min-height:5dip;
+    width:1.2em;    
+    padding :0;   
+    background:color(button-face);
+    border:1dip solid color(widget-border);
+    border-left:none;
+    border-radius: 0 length(border-radius) length(border-radius) 0;
+    //foreground-image:url(stock:chevron-down); /* that arrow */
+    //foreground-size: 6dip; /* that arrow */
+    foreground-repeat: no-repeat;
+    foreground-position: 50% 50%;    
+    foreground-image: icon(down); /* that arrow */
+    foreground-size:10px;
+  }
+  
+  :root:rtl > button
+  {
+    border:1dip solid color(widget-border);
+    border-left:none;
+    border-radius: length(border-radius) 0 0 length(border-radius);
+  }
+  :root > button:hover    { transition:none; background:color(button-hover); }
+  :root > button:active   { background:color(button-hover); }
+  :root > button:disabled { 
+    background-color: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+}     
+  
+@set std-masked-edit < std-masked-edit-base /* style block for the masked ctl, derived from std-edit */
+{
+  :root {
+    color: color(widget-text);
+    background: color(widget-back);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    line-height:1.4em;
+    height:1.4em;
+    padding:0.2em 0.4em;
+    border:1px solid color(widget-border);
+    border-radius: length(border-radius);
+  }
+ 
+  :root > span:current
+  {
+    background-color: transparent;
+    color: color(widget-text);
+  }
+  
+  :root:owns-popup > span,
+  :root:focus > span:current
+  {
+    background-color: color(selection);
+    color: color(selection-text);
+  }
+  
+  :root:owns-popup,
+  :root:focus            {  text-selection: color(selection-text) color(selection); }
+  :root:disabled         {  background:color(widget-disabled);  color:color(widget-disabled-text); }
+  :root:tab-focus        {  outline:@STD-OUTLINE-FOCUS; }    
+
+}
+  
+@set std-time-edit < std-time-edit-base
+{
+  :root
+  {
+    font:system;
+    font-size: inherit;
+    color:color(widget-text);
+    background: color(widget-border);
+    text-selection: color(selection-nf-text) color(selection-nf);
+    padding:0;
+    border-radius: length(border-radius); 
+    height:1.8em;
+    border:1px solid color(widget-border);
+    border-radius: length(border-radius);
+    overflow:hidden; 
+    border-spacing:0;
+  }
+  
+  :root > caption {
+    width:*;
+    padding:0.2em 0.4em;
+    line-height:1.4em;
+    height:1.4em;
+    background: color(widget-back);
+  }
+  
+  :root:disabled > caption { background:color(widget-disabled); color:color(widget-disabled-text); }  
+
+  :root > caption > span:current
+  {
+    background-color: transparent;
+    color: color(widget-text);
+  }
+  :root:focus > caption > span:current
+  {
+    background-color: color(selection);
+    color: color(selection-text);
+  }    
+
+  :root:invalid
+  {
+    color:red;
+  }
+
+  :root > button
+  {
+    height:0.5*;
+    width:1.2em;
+    background:color(button-face);
+    border:none;
+    border-left:1px solid color(widget-border);
+    border-radius: 0;
+    foreground-position:50% 50%;
+    foreground-size:5dip;
+    foreground-repeat:no-repeat;
+  }
+
+  :root > button:hover
+  {
+    transition:none;
+    background:color(button-hover);
+  }
+  :root > button:active
+  {
+    background:color(button-hover);
+  }
+  :root > button:disabled
+  {
+    background-color: color(widget-disabled);
+    color: color(widget-disabled-text);
+    fill: color(widget-disabled-text);
+  }
+
+  :root > button.minus
+  {
+    padding:0;
+    //border-radius: 0 0 length(border-radius) 0;
+    //border-top-style: none;
+    //border-left-style: none;
+    foreground-image: url(stock:chevron-down); 
+  }
+ 
+  :root > button.plus
+  {
+    padding:0;
+
+    //border-radius: 0 length(border-radius) 0 0;
+    //border-bottom-style: none;
+    //border-left-style: none;
+    foreground-image: url(stock:chevron-up);     
+  }
+}
+
+@set std-toggle  < std-toggle-base {
+
+  :root {
+    flow:stack;
+    behavior:toggle;
+    border:none;
+    background:none;
+    width:max-content;
+    height:1.4em;
+    padding:0 0 0 30dip;
+    cursor:pointer;
+  }
+
+  :root[type="radio"] { behavior:radio; }
+
+  :root:rtl {
+    padding:0 30dip 0 0;
+  }
+  
+  :root::marker {
+    width:22dip; 
+    height:11dip;
+    background:color(button-face);
+    border:1dip solid color(widget-border); 
+    border-radius:6.5dip;
+    margin:* * * 0dip;
+    foreground-image:url(stock:disk);
+    foreground-repeat:no-repeat;
+    foreground-position:1dip 50%;
+    foreground-size:12dip;
+    fill:color(widget-back);
+    stroke:color(widget-border);
+    stroke-width:1dip;
+    transition:foreground-position circ-in-out 100ms, 
+               background-color linear 100ms,
+               border-color linear 100ms,
+               stroke linear 100ms,
+               fill linear 100ms;    
+  }
+
+  :root::marker:rtl {
+    margin:* 0dip * *;
+  }
+
+  :root:theme(dark)::marker { 
+    background:color(widget-back); 
+    fill: color(widget-border);
+  }
+
+  :root:checked::marker {
+    foreground-position:12dip 50%;
+    background:color(accent);
+    border-color:color(accent);
+    stroke:color(accent);
+  }
+
+  :root:theme(dark):checked::marker { 
+    fill:#fff;
+  }
+
+
+  :root > option { text-align: start; }
+  :root > option:first-child { visibility:visible; }
+  :root > option:last-child { visibility:hidden; }
+  :root:checked > option:first-child { visibility:hidden; }
+  :root:checked > option:last-child { visibility:visible; }
+
+  :root:disabled::marker { 
+    background:color(widget-disabled); 
+    fill:color(widget-disabled);  
+    border-color:color(widget-disabled-text);
+    stroke:color(widget-disabled-text);  
+  }
+  :root:disabled > option { color:color(widget-disabled-text); }  
+
+} 
+
+
+@set std-v-scrollbar
+{
+  .prev 
+  { 
+    background-image:url(theme:v-scrollbar-minus-normal); 
+    background-repeat:stretch; 
+  }
+  .prev:hover 
+  { 
+    background-image:url(theme:v-scrollbar-minus-hover); 
+  }
+  .prev:active 
+  { 
+    background-image:url(theme:v-scrollbar-minus-pressed); 
+  }
+  .prev:disabled 
+  { 
+    background-image:url(theme:v-scrollbar-minus-disabled); 
+  }
+
+  .next 
+  { 
+    background-image:url(theme:v-scrollbar-plus-normal); 
+    background-repeat:stretch; 
+  }
+  .next:hover 
+  { 
+    background-image:url(theme:v-scrollbar-plus-hover); 
+  }
+  .next:active 
+  { 
+    background-image:url(theme:v-scrollbar-plus-pressed); 
+  }
+  .next:disabled 
+  { 
+    background-image:url(theme:v-scrollbar-plus-disabled); 
+  }
+
+  .base
+  {
+    background-image:url(theme:v-scrollbar-base); 
+    background-repeat:stretch; 
+  }
+
+  .prev-page 
+  { 
+    background-image:url( v-scrollbar-page-minus-normal ); 
+    background-repeat:stretch;       
+  }
+  .prev-page:hover 
+  { 
+    background-image:url( v-scrollbar-page-minus-hover ); 
+  }
+  .prev-page:active 
+  { 
+    background-image:url( v-scrollbar-page-minus-pressed ); 
+  }
+  .prev-page:disabled 
+  { 
+    background-image:url( v-scrollbar-page-minus-disabled ); 
+  }
+  
+  .next-page 
+  { 
+    background-image:url( v-scrollbar-page-plus-normal ); 
+    background-repeat:stretch;       
+  }
+  .next-page:hover 
+  { 
+    background-image:url( v-scrollbar-page-plus-hover ); 
+  }
+  .next-page:active 
+  { 
+    background-image:url( v-scrollbar-page-plus-pressed ); 
+  }
+  .next-page:disabled 
+  { 
+    background-image:url( v-scrollbar-page-plus-disabled ); 
+  }
+  
+  .slider 
+  { 
+    background-image:url(theme:v-scrollbar-thumb-normal); 
+    background-repeat:stretch; 
+  }
+  .slider:hover 
+  { 
+    background-image:url(theme:v-scrollbar-thumb-hover); 
+  }
+  .slider:active 
+  { 
+    background-image:url(theme:v-scrollbar-thumb-pressed); 
+  }
+  .slider:disabled 
+  { 
+    background-image:url(theme:v-scrollbar-thumb-disabled); 
+  }
+}
+
+@set std-details < std-details-base
+{
+  :root {
+    flow:vertical;
+  }
+  :root > summary {
+    padding-left:1.6em;
+  }
+  :root > summary::marker {
+    size:1em;
+    margin:* 0 * 0.3em;
+    background: url(icon:right) no-repeat;
+    background-size:1em;
+    background-position: top 50% left 50%;
+    fill:currentcolor;
+    transform: rotate(0deg);
+    //transition: transform 200ms linear;
+  }
+  :root:expanded > summary::marker { 
+    transform: rotate(90deg);
+  }
+}
+
+
+
+/* style block defining vertical scrollbar */
+@set std-v-scrollbar
+{
+  .prev 
+  { 
+    background: var(button-scrollbar,#aaa);
+    foreground-image:url(stock:chevron-up); 
+    foreground-position:50% 50%;
+    foreground-repeat:no-repeat;
+    fill: var(button-text,#000);
+    height:16px;
+  }
+  
+  .next 
+  { 
+    background: var(button-scrollbar,#aaa);
+    foreground-image:url(stock:chevron-down); 
+    foreground-position:50% 50%;
+    foreground-repeat:no-repeat;
+    fill: var(button-text,#000);
+    height:16;
+  }
+  
+  .base,
+  .next-page, 
+  .prev-page 
+  { 
+    background: var(button-scrollbar,#aaa); 
+  }
+
+  .next:hover,
+  .prev:hover     { background: var(button-face); }
+  
+  .next:active,  
+  .prev:active    { background: var(button-pressed-alt); fill: var(button-text-alt); }
+
+  .slider 
+  { 
+    background: var(slider-scrollbar,#bbb);
+    min-width: 5px;
+    min-height: 5px;
+  }
+
+  .slider:hover
+  { 
+    background: var(slider-scrollbar-hover, #ddd);
+  }
+
+  .slider:active 
+  { 
+    background: var(button-pressed-alt,#eee);
+  }
+
+  
+  .next:disabled, .slider:disabled, 
+  .prev:disabled  { height:0; background:transparent; foreground-image:none; }
+  
+  .base:disabled
+  {
+    background: var(button-face,#aaa);
+  }
+  
+  
+  .base { width: 16px; } /* explicit declaration of its width */
+  .corner { background-color: transparent; }
+  
+}
+
+/* style block defining horizontal scrollbar */
+@set std-h-scrollbar
+{
+  .prev 
+  { 
+    background: var(button-scrollbar,#aaa);
+    foreground-image:url(stock:chevron-left); 
+    foreground-position:50% 50%;
+    foreground-repeat:no-repeat;
+    fill: var(button-text,#000);    
+    width:16px;
+  }
+  .next 
+  { 
+    background: var(button-scrollbar,#aaa);
+    foreground-image:url(stock:chevron-right); 
+    foreground-position:50% 50%;
+    foreground-repeat:no-repeat;
+    fill: var(button-text,#000);    
+    width:16px;
+  }
+  .base,
+  .next-page, 
+  .prev-page 
+  { 
+    background: var(button-scrollbar,#aaa); 
+  }
+
+  .next:hover,
+  .prev:hover     { background: var(button-face); }
+  
+  .next:active,  
+  .prev:active    { background: var(button-pressed-alt); fill: var(button-text-alt); }
+
+  .slider 
+  { 
+    background: var(slider-scrollbar,#bbb);
+  }
+
+  .slider:hover
+  { 
+    background: var(slider-scrollbar-hover, #ddd);
+  }
+
+  .slider:active 
+  { 
+    background: var(button-pressed-alt,#eee);
+  }
+
+
+  .next:disabled, .slider:disabled, 
+  .prev:disabled  { height:0; background:transparent; foreground-image:none; }
+  
+  .base:disabled  { background: var(button-face,#aaa); }
+    
+  .base { height: 16px; } /* explicit declaration of its height */
+  
+}
+

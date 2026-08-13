@@ -1,0 +1,121 @@
+<html 
+  window-resizable=false
+  window-minimizable=false
+  window-maximizable=false>
+    <head>
+        <title>Sciter</title>
+        <style src="sciter:msgbox.css" />
+        <script type="module">
+
+import { launch } from "@env"; 
+import { on } from "@sciter"; 
+
+const params = Window.this.parameters;
+
+//console.log(JSON.stringify(params));
+
+function props(vnode) { return vnode[1] ?? {}; }
+function kids(vnode) { return vnode[2] ?? []; }
+
+let buttonList = [ <button #ok role="default-button">OK</button> ];
+
+let body;
+let caption;
+let type;
+let resizable;
+
+if( Reactor.isNode(params) ) { // vnode
+
+  type = params[0];
+  const children = kids(params);
+
+  if(type=="question")
+    buttonList = [ <button #yes role="default-button">Yes</button>,
+                   <button #no role="cancel-button">No</button> ];
+
+  const atts =  props(params);
+  caption = atts.caption;
+  resizable = atts.resizable;
+  atts.caption = undefined;
+
+  var content;
+  var buttons;
+
+  if( children.length <= 1) {
+    content = <content>{children[0]}</content>;
+    buttons = <buttons>{buttonList}</buttons>; 
+  } else if(children[0][0] != "content") {
+    content = <content>{children}</content>;
+    buttons = <buttons>{buttonList}</buttons>;
+  } else {
+    content = children[0];
+    buttons = children[1];
+  }
+
+  body = <body {atts}>
+      <main#content type={ type }>{ kids(content) || "?" }</main>
+      <footer#button-bar>{ kids(buttons) }</footer>
+    </body>;
+  
+} else if( typeof params == "object" ) {
+
+  body = <body>
+      <main#content type={ params.type || "information" }>{ params.content || "?" }</main>
+      <footer#button-bar>{ params.buttons || buttonList }</footer>
+    </body>;
+} else {
+  body = <body>
+      <main #content type="information">{ params.toString() }</main>
+      <footer #button-bar>{buttonList}</footer>
+  </body>;
+}
+
+document.body.patch(body);
+
+const main = document.$("main#content");
+const form = main.$("form");
+
+if(form) {
+  main.attributes["has-form"] = true;
+  //form.value = vdata;
+}
+
+document.on("^click", "[href]", function(evt, link) {
+  var href = link.getAttribute("href");
+  launch(href);
+  return true;
+});
+
+document.on("click", "footer button", function (evt,button) {
+  var bid = button.getAttribute("id");
+  if( bid ) {
+    if((bid == "ok") && form) {
+      Window.this.close(form.value);     
+      return false;
+    }
+    Window.this.close(bid); 
+    return false;
+  }
+});
+
+function setupMins() {
+  const body = document.body;
+  const [wmin,wmax] = body.state.contentWidths();
+  var h = body.state.contentHeight(wmax);
+  Window.this.minSize = [wmax,h];
+}
+
+document.on("ready",function() {
+  Window.this.caption = caption || type;
+  if(resizable !== undefined)
+    Window.this.isResizable = resizable;
+});
+
+Window.this.on("statechange", setupMins );
+Window.this.on("resolutionchange", setupMins );
+
+
+        </script>
+    </head>
+    <body></body>
+</html>

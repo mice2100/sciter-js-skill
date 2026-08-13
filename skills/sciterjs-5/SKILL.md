@@ -157,6 +157,12 @@ selector not covered in this file, check `assets/css-reference.md`'s "Compatibil
 Baseline" and "Value Enumerations for High-Risk Properties" sections, which enumerate what's
 actually confirmed vs. merely legacy/unconfirmed.
 
+Before styling any standard control (button, input, select, menu, scrollbar, tree, calendar,
+slider, progress, ...) from scratch, check `assets/builtin-css-guide.md` — Sciter ships a
+complete default theme (`assets/builtin-css/ux-master.css`) with real `var(...)` colors for
+every control state, including dark mode. Overriding the `var(...)` palette is almost always
+the right move instead of writing new selectors.
+
 ### PROHIBITED - Use Sciter Equivalents Instead
 
 | Web Standard | Sciter Equivalent |
@@ -499,6 +505,7 @@ Core API references (distilled from official docs — read these for authoritati
 - **Component & Painting**: See `assets/component-painting-reference.md` for Element extension, custom painting, and custom aspect functions
 - **Reactor/JSX**: See `assets/reactor-component-reference.md` for Reactor components, JSX, and the full Reactor top-level API
 - **SOM Patterns**: See `assets/som-patterns.md` for advanced SOM_PASSPORT usage
+- **Built-in CSS (ground truth)**: See `assets/builtin-css-guide.md` for an index of Sciter's actual shipped default stylesheets in `assets/builtin-css/` (`master-base.css`, `ux-master.css`, etc.) — the real default styling/behavior of every standard element, the full theme `var(...)` palette (light/dark), default context menus, and the message-box pattern. Check this before restyling a standard control from scratch or inventing a `var()` name.
 - **Project Template**: See `assets/template/` for complete scaffolding template
 
 Patterns mined from the official samples (real-world idioms, gotchas, and undocumented-but-working APIs not found in the prose docs — check these when the reference docs above don't cover a scenario):
@@ -1582,6 +1589,56 @@ rediscovering them.
   (e.g. `height: 40px; line-height: 40px;`) instead. This is plain, standard, single-line
   vertical-centering CSS and it works reliably where the Sciter-specific function didn't.
 
+- **Rule of thumb for centering text in `<span>`/`<p>`/any bare text-containing
+  element: line-height only needs to match the box's OWN height when that height is
+  taller than the text's natural line-height — not universally.** Two ways a box ends
+  up taller than its text: (a) an explicit `height` is set on it (`.track-cover`'s
+  42px icon box above), or (b) it's a "bare" child (no padding/height of its own) in a
+  `flow:horizontal`/`flow:horizontal-wrap` row and gets implicitly **stretched** to
+  match a taller sibling — see `css-reference.md`'s flow:horizontal "common mistake"
+  section. In both cases, the text still lays out per its own (inherited or default)
+  line-height inside that taller box and sits top-anchored — nothing auto-centers it —
+  so you must set a literal px `line-height` equal to the box's own content-box height
+  (confirmed working: `.track-cover { height:42px; line-height:42px; }`,
+  `.candidate-label` forced to 28px by row-stretch needed `height:28px; line-height:28px;`
+  added to fix it). **But when the box's height is auto/content-derived and nothing is
+  forcing it taller** (no explicit height, and either not in a flow row or sized by
+  real sibling content rather than the empty-child stretch rule — confirmed on a
+  `.track-title` `<p>` whose 28px height came entirely from its own font-size ×
+  inherited line-height + padding, no stretching involved), the element's own default
+  line-height is already correct and matching it to anything is unnecessary — actual
+  centering *within its parent row* still comes from `vertical-align:middle` on the
+  flow container (`.track-row`), which centers the whole natural-height block as a
+  unit. Diagnosis order: check with `element.state.box("xywh","border",rowElement)`
+  whether the suspect element's height exceeds what its text/padding alone would
+  produce — if yes, it's being stretched/fixed and needs the matching-line-height fix;
+  if the height already equals text+padding, look at the *parent's* `vertical-align`
+  instead (per the flow:horizontal mistake above), not the child's line-height.
+
+- **Before deleting/commenting any author CSS rule on an element that has `behavior:*`
+  (button, radio, checkbox, select-dropdown, masked-edit/date/time, slider, progress,
+  etc.), check what `sciter:master-base.css` already presets for it — an author rule
+  that looks redundant with a "sane default" is often silently overriding a
+  Sciter-specific default that ISN'T the sane one.** Confirmed concretely: for
+  `type="radio"`/`type="checkbox"`, `master-base.css`'s `std-radio-base`/
+  `std-checkbox-base` give **real `<input>` elements `vertical-align:middle`** but give
+  **any other element with the same `behavior` (e.g. `<button type="radio">`)
+  `vertical-align:baseline` instead** — a deliberate asymmetry, not a copy-paste
+  oversight. Removing an author `vertical-align:middle` override on a `<button
+  type="radio">` inside a `flow:horizontal` row measurably inflated the row's height
+  by 20px (43px → 63px, `element.state.box("xywh","border",container)` before/after)
+  because `baseline` alignment on an `inline-block` reserves line-box ascent/descent
+  space beyond the button's own padding box — a large, easy-to-see symptom this time,
+  but the same mechanism can produce a subtle few-px version elsewhere. Same
+  `:not(input)` → `baseline` pattern also hits custom `select[type=select-dropdown]`
+  captions and `masked-edit`/date/time widgets — treat any non-`<input>` behavior
+  element's alignment as suspect if an author `vertical-align` near it looks removable.
+  **Diagnostic shortcut:** `sciter_get_computed_style` reports `behavior` and
+  `style-set` fields directly on the element — a non-empty value means go look up that
+  `@set std-*-base` block in the downloaded `master-base.css`/`ux-master.css` before
+  assuming an author rule is safe to drop, rather than guessing from how the property
+  "usually" defaults in browser CSS.
+
 - **A generic `button, input { font: inherit; ... }` reset silently breaks vertical
   centering, because `font` is a shorthand that includes `line-height`.** Master
   stylesheets often center single-line text by tying `line-height` to the box's own
@@ -1659,6 +1716,33 @@ rediscovering them.
   eval'd module sometimes silently disappears from the returned `result` (no error,
   just missing key) — if a value goes missing, re-shape the export into flat
   primitive-valued keys rather than assuming the call failed.
+
+- **⚠️ CHECKLIST ITEM — never wrap a previously-bare text label in a new `<span>` just
+  to make it independently swappable from JS. Retarget the existing text node's value
+  instead.** A button styled `flow: horizontal; vertical-align: middle;` with plain
+  text + an `<svg>` as direct children centers both correctly (the "svg-wrapping
+  .icon-btn/.play-btn" case referenced elsewhere in this list). The moment that plain
+  text gets wrapped (`<span id="label">生成音乐</span>`) so JS can do
+  `label.textContent = "..."` without touching the sibling icon, the text visibly
+  rides high in the button — same failure family as the `.track-cover` /
+  `line-height: height("100%")` entries above: it's inline text-flow content, not a
+  replaced element, so it doesn't get the automatic middle-alignment the svg gets.
+  **First attempted fix that looked right but wasn't:** `line-height: 1` on the span.
+  This *appeared* to fully center the text in a zoomed screenshot taken through
+  `sciter-mcp`'s debug container, but the real standalone `scapp.app` window (what the
+  user actually sees) still rendered it off-center — confirmed by the user directly,
+  not by a metrics check. **Do not trust a `sciter-mcp` container screenshot as
+  equivalent to the real app even when it's launching the identical binary by path**;
+  something about the container's own window chrome/render path was different enough
+  here to hide the bug. **The actual fix:** don't introduce the span at all — keep the
+  button's original bare text node and swap `element.firstChild.nodeValue` (or
+  `.data`) directly:
+  ```js
+  document.$("#my-btn").firstChild.nodeValue = isX ? "Label A" : "Label B";
+  ```
+  This is zero-risk because the DOM structure never changes from the one that was
+  already confirmed centered — only the string content does. Prefer this over any
+  span/line-height workaround from the first attempt.
 
 ---
 

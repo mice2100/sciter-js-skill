@@ -1,0 +1,69 @@
+html 
+{ 
+  font:system;
+  width:max-content; 
+  height:min-content; 
+  overflow:none;
+  max-width:800dip;
+  background-color: var(widget-back);
+  color: var(widget-text);
+}
+
+body { margin:0; padding:0;  }
+
+#content
+{
+  //background-color:threedhighlight;
+  padding-left:96dip;
+  padding-right:20dip;
+  padding-bottom:10dip;
+  vertical-align:middle;
+  foreground-repeat: no-repeat;
+  foreground-position: 16dip 50%;
+  background-repeat: no-repeat;
+  background-position: 14dip 14dip;
+  background-size: 70dip 70dip; 
+  min-width:160dip;
+  min-height:88dip;
+  width:*;
+  height:*;
+  //border-bottom: 1px solid threedshadow;
+  white-space:pre;
+}
+
+#content:not([has-form]) {
+  behavior:selectable;
+  //cursor:text;
+}
+
+#content[type="info"],
+#content[type="information"] { background-image:url(sciter:icon-information.png); }
+#content[type="alert"] { background-image:url(sciter:icon-alert.png); }
+#content[type="error"] { background-image:url(sciter:icon-error.png); }
+#content[type="warning"] { background-image:url(sciter:icon-alert.png); }
+#content[type="question"] { background-image:url(sciter:icon-question.png); }
+
+#content > form {
+  flow:row(label, input select textarea row);
+  border-spacing: 5dip;
+}
+
+#content > form > row { flow:horizontal; display:block; }
+#content > form > label { margin:* 0 * *; white-space:nowrap; }
+#content > form > label::after { content:":"; }
+
+#button-bar
+{
+  flow:horizontal;
+  padding:10dip;
+  border-spacing:10dip;
+  margin:0;
+  horizontal-align: right;
+}
+    
+#button-bar button  
+{
+  display:block; 
+  min-width:4em; line-height:2em; vertical-align:middle; width: min-content; 
+  text-align:center;
+}
